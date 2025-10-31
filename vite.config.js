@@ -12,12 +12,15 @@ export default defineConfig({
   },
   server: {
     host: true,
-    port: 3000
+    port: 3000,
+    open: false
   },
   build: {
+    target: 'esnext',
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -27,5 +30,8 @@ export default defineConfig({
         }
       }
     }
+  },
+  optimizeDeps: {
+    include: ['vue', 'vue-router', 'pinia']
   }
 })
