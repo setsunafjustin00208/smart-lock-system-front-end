@@ -57,12 +57,6 @@
                     </button>
                   </div>
                 </div>
-                
-                <div class="has-text-centered mt-4">
-                  <p class="has-text-white-ter is-size-7">
-                    Demo credentials: admin / admin
-                  </p>
-                </div>
               </form>
             </div>
           </div>
@@ -247,16 +241,6 @@ const handleLogin = async () => {
 
 .button.is-loading::after {
   border-color: transparent transparent white white;
-}
-
-/* Demo credentials styling */
-.has-text-white-ter {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-family: 'Courier New', monospace;
-  font-weight: 500;
 }
 
 /* Animation for card entrance */

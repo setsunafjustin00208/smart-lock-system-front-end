@@ -10,10 +10,19 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "deploy:local": "node scripts/deploy.js local",
+    "deploy:test": "node scripts/deploy.js test",
+    "deploy:staging": "node scripts/deploy.js staging",
+    "deploy:production": "node scripts/deploy.js production",
+    "test:api": "node scripts/test-api.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:integration": "playwright test tests/api-integration.spec.js"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
+    "axios": "^1.13.1",
     "bulma": "^1.0.4",
     "date-fns": "^4.1.0",
     "pinia": "^3.0.3",
@@ -23,6 +32,7 @@
     "vue-toastification": "^2.0.0-rc.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "@vitejs/plugin-vue": "^6.0.1",
     "sass-embedded": "^1.93.2",
     "vite": "^7.1.7",

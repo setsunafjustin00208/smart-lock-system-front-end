@@ -1,52 +1,63 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import api from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
-  const token = ref(localStorage.getItem('token'))
+  const token = ref(localStorage.getItem('auth_token'))
+  const refreshToken = ref(localStorage.getItem('refresh_token'))
 
   const isAuthenticated = computed(() => !!token.value)
   
   const hasRole = (role) => {
-    return user.value?.role === role || user.value?.role === 'admin'
+    return user.value?.roles?.includes(role) || user.value?.roles?.includes('admin')
   }
+
+  const isAdmin = computed(() => user.value?.roles?.includes('admin'))
+  const isManager = computed(() => user.value?.roles?.includes('manager'))
 
   const login = async (credentials) => {
-    // Simulate API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        if (credentials.username === 'admin' && credentials.password === 'admin') {
-          const mockUser = {
-            id: 1,
-            username: 'admin',
-            email: 'admin@smartlock.com',
-            role: 'admin',
-            name: 'System Administrator'
-          }
-          const mockToken = 'mock-jwt-token-' + Date.now()
-          
-          user.value = mockUser
-          token.value = mockToken
-          localStorage.setItem('token', mockToken)
-          localStorage.setItem('user', JSON.stringify(mockUser))
-          
-          resolve({ success: true, user: mockUser })
-        } else {
-          resolve({ success: false, message: 'Invalid credentials' })
-        }
-      }, 1000)
-    })
+    try {
+      const response = await api.post('/auth/login', credentials)
+      const { user: userData, token: authToken, refresh_token } = response.data.data
+      
+      user.value = userData
+      token.value = authToken
+      refreshToken.value = refresh_token
+      
+      localStorage.setItem('auth_token', authToken)
+      localStorage.setItem('refresh_token', refresh_token)
+      localStorage.setItem('user', JSON.stringify(userData))
+      
+      return { success: true, user: userData }
+    } catch (error) {
+      console.error('Login error:', error)
+      return { 
+        success: false, 
+        message: error.response?.data?.messages?.error || 'Login failed' 
+      }
+    }
   }
 
-  const logout = () => {
-    user.value = null
-    token.value = null
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+  const logout = async () => {
+    try {
+      if (token.value) {
+        await api.post('/auth/logout')
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      user.value = null
+      token.value = null
+      refreshToken.value = null
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user')
+    }
   }
 
   const checkAuth = () => {
-    const savedToken = localStorage.getItem('token')
+    const savedToken = localStorage.getItem('auth_token')
     const savedUser = localStorage.getItem('user')
     
     if (savedToken && savedUser) {
@@ -58,7 +69,10 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user,
     token,
+    refreshToken,
     isAuthenticated,
+    isAdmin,
+    isManager,
     hasRole,
     login,
     logout,

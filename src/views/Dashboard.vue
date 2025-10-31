@@ -199,7 +199,9 @@ const refreshStatus = async () => {
   isLoading.value = false
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Fetch locks from API
+  await locksStore.fetchLocks()
   // Start real-time updates
   locksStore.startRealTimeUpdates()
 })

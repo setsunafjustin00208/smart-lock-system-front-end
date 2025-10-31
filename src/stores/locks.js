@@ -1,80 +1,59 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useToast } from 'vue-toastification'
+import api from '@/services/api'
 
 export const useLocksStore = defineStore('locks', () => {
   const toast = useToast()
-  const locks = ref([
-    {
-      id: 1,
-      name: 'Front Door',
-      location: 'Main Entrance',
-      isLocked: true,
-      status: 'online',
-      batteryLevel: 85,
-      lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      hardwareId: 'ESP32-001'
-    },
-    {
-      id: 2,
-      name: 'Back Door',
-      location: 'Garden Entrance',
-      isLocked: false,
-      status: 'online',
-      batteryLevel: 92,
-      lastActivity: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      hardwareId: 'ESP32-002'
-    },
-    {
-      id: 3,
-      name: 'Garage Door',
-      location: 'Garage',
-      isLocked: true,
-      status: 'offline',
-      batteryLevel: 23,
-      lastActivity: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      hardwareId: 'ESP32-003'
-    },
-    {
-      id: 4,
-      name: 'Office Door',
-      location: 'Home Office',
-      isLocked: false,
-      status: 'online',
-      batteryLevel: 67,
-      lastActivity: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-      hardwareId: 'ESP32-004'
-    }
-  ])
-  
+  const locks = ref([])
   const loading = ref(false)
   const error = ref(null)
 
   const onlineLocks = computed(() => 
-    locks.value.filter(lock => lock.status === 'online')
+    locks.value.filter(lock => lock.is_online)
   )
 
   const offlineLocks = computed(() => 
-    locks.value.filter(lock => lock.status === 'offline')
+    locks.value.filter(lock => !lock.is_online)
   )
 
   const lockedCount = computed(() => 
-    locks.value.filter(lock => lock.isLocked).length
+    locks.value.filter(lock => lock.status?.is_locked).length
   )
 
   const unlockedCount = computed(() => 
-    locks.value.filter(lock => !lock.isLocked).length
+    locks.value.filter(lock => !lock.status?.is_locked).length
   )
 
   const lowBatteryLocks = computed(() => 
-    locks.value.filter(lock => lock.batteryLevel < 30)
+    locks.value.filter(lock => lock.status?.battery_level < 30)
   )
+
+  const fetchLocks = async () => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const response = await api.get('/locks')
+      locks.value = response.data.data.map(lock => ({
+        ...lock,
+        config: JSON.parse(lock.config_data || '{}'),
+        status: JSON.parse(lock.status_data || '{}')
+      }))
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Failed to fetch locks'
+      toast.error('Failed to load locks')
+      console.error('Fetch locks error:', err)
+    } finally {
+      loading.value = false
+    }
+  }
 
   const toggleLock = async (lockId) => {
     const lock = locks.value.find(l => l.id === lockId)
     if (!lock) return
 
-    if (lock.status === 'offline') {
+    if (!lock.is_online) {
       toast.error('Cannot control offline lock')
       return
     }
@@ -82,25 +61,25 @@ export const useLocksStore = defineStore('locks', () => {
     loading.value = true
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const action = lock.status?.is_locked ? 'unlock' : 'lock'
+      const response = await api.post(`/locks/${lockId}/control`, { action })
       
-      lock.isLocked = !lock.isLocked
-      lock.lastActivity = new Date().toISOString()
+      // Update local state
+      if (response.data.status === 'success') {
+        lock.status.is_locked = !lock.status.is_locked
+        lock.status.last_activity = new Date().toISOString()
+        
+        const actionText = lock.status.is_locked ? 'locked' : 'unlocked'
+        toast.success(`${lock.name} ${actionText} successfully`)
+      }
       
-      const action = lock.isLocked ? 'locked' : 'unlocked'
-      toast.success(`${lock.name} ${action} successfully`)
-      
-      // Simulate real-time update
-      setTimeout(() => {
-        updateLockStatus(lockId, { 
-          lastActivity: new Date().toISOString() 
-        })
-      }, 500)
+      // Refresh locks to get updated data
+      await fetchLocks()
       
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.message || 'Failed to control lock'
       toast.error('Failed to control lock')
+      console.error('Toggle lock error:', err)
     } finally {
       loading.value = false
     }
@@ -109,29 +88,31 @@ export const useLocksStore = defineStore('locks', () => {
   const updateLockStatus = (lockId, status) => {
     const lock = locks.value.find(l => l.id === lockId)
     if (lock) {
-      Object.assign(lock, status)
+      Object.assign(lock.status, status)
     }
   }
 
-  // Simulate real-time updates
+  // Simulate real-time updates (will be replaced with WebSocket)
   const startRealTimeUpdates = () => {
     setInterval(() => {
       // Randomly update battery levels
       locks.value.forEach(lock => {
-        if (Math.random() < 0.1) { // 10% chance
-          lock.batteryLevel = Math.max(0, lock.batteryLevel - Math.floor(Math.random() * 2))
+        if (Math.random() < 0.1 && lock.status) { // 10% chance
+          lock.status.battery_level = Math.max(0, lock.status.battery_level - Math.floor(Math.random() * 2))
         }
       })
       
-      // Randomly change status
+      // Randomly change online status
       if (Math.random() < 0.05) { // 5% chance
         const randomLock = locks.value[Math.floor(Math.random() * locks.value.length)]
-        randomLock.status = randomLock.status === 'online' ? 'offline' : 'online'
-        
-        if (randomLock.status === 'offline') {
-          toast.warning(`${randomLock.name} went offline`)
-        } else {
-          toast.success(`${randomLock.name} is back online`)
+        if (randomLock) {
+          randomLock.is_online = !randomLock.is_online
+          
+          if (!randomLock.is_online) {
+            toast.warning(`${randomLock.name} went offline`)
+          } else {
+            toast.success(`${randomLock.name} is back online`)
+          }
         }
       }
     }, 10000) // Every 10 seconds
@@ -146,6 +127,7 @@ export const useLocksStore = defineStore('locks', () => {
     lockedCount,
     unlockedCount,
     lowBatteryLocks,
+    fetchLocks,
     toggleLock,
     updateLockStatus,
     startRealTimeUpdates

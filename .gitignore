@@ -30,3 +30,4 @@ coverage
 *.tsbuildinfo
 /ai-assistant/
 /.history/
+.env

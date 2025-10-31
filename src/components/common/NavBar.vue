@@ -94,8 +94,8 @@ const notificationsStore = useNotificationsStore()
 const showMobileMenu = ref(false)
 const showUserMenu = ref(false)
 
-const logout = () => {
-  authStore.logout()
+const logout = async () => {
+  await authStore.logout()
   router.push('/login')
 }
 
