@@ -6,8 +6,11 @@ import api from '@/services/api'
 export const useLocksStore = defineStore('locks', () => {
   const toast = useToast()
   const locks = ref([])
+  const lockStatus = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const pollingInterval = ref(null)
+  const statusInterval = ref(null)
 
   const onlineLocks = computed(() => 
     locks.value.filter(lock => lock.is_online)
@@ -49,6 +52,25 @@ export const useLocksStore = defineStore('locks', () => {
     }
   }
 
+  const fetchLockStatus = async () => {
+    try {
+      const response = await api.get('/locks/status')
+      lockStatus.value = response.data.data || []
+      
+      // Update locks with status information
+      locks.value.forEach(lock => {
+        const status = lockStatus.value.find(s => s.lock_id === lock.id)
+        if (status) {
+          lock.status = status.status
+          lock.is_online = status.status === 'online'
+          lock.last_updated = status.last_updated
+        }
+      })
+    } catch (error) {
+      console.error('Fetch lock status error:', error)
+    }
+  }
+
   const toggleLock = async (lockId) => {
     const lock = locks.value.find(l => l.id === lockId)
     if (!lock) return
@@ -62,7 +84,9 @@ export const useLocksStore = defineStore('locks', () => {
     
     try {
       const action = lock.status?.is_locked ? 'unlock' : 'lock'
-      const response = await api.post(`/locks/${lockId}/control`, { action })
+      const response = await api.post(`/locks/${lockId}/control`, { 
+        action: action
+      })
       
       // Update local state
       if (response.data.status === 'success') {
@@ -85,6 +109,51 @@ export const useLocksStore = defineStore('locks', () => {
     }
   }
 
+  const controlLock = async (lockId, action) => {
+    try {
+      const response = await api.post(`/locks/${lockId}/control`, {
+        action: action
+      })
+      
+      if (response.data.status === 'success') {
+        const lockName = locks.value.find(l => l.id === lockId)?.name || 'Lock'
+        toast.success(`${lockName} ${action}ed successfully`)
+        
+        // Refresh locks after action
+        await fetchLocks()
+        return true
+      }
+    } catch (error) {
+      console.error('Lock control error:', error)
+      toast.error(`Failed to ${action} lock`)
+      return false
+    }
+  }
+
+  const lockAll = async () => {
+    const promises = locks.value
+      .filter(lock => !lock.status?.is_locked && lock.is_online)
+      .map(lock => controlLock(lock.id, 'lock'))
+    
+    await Promise.all(promises)
+  }
+
+  const unlockAll = async () => {
+    const promises = locks.value
+      .filter(lock => lock.status?.is_locked && lock.is_online)
+      .map(lock => controlLock(lock.id, 'unlock'))
+    
+    await Promise.all(promises)
+  }
+
+  const getOfflineLocks = () => {
+    return locks.value.filter(lock => !lock.is_online)
+  }
+
+  const getLowBatteryLocks = () => {
+    return locks.value.filter(lock => lock.status?.battery_level && lock.status.battery_level < 20)
+  }
+
   const updateLockStatus = (lockId, status) => {
     const lock = locks.value.find(l => l.id === lockId)
     if (lock) {
@@ -92,34 +161,40 @@ export const useLocksStore = defineStore('locks', () => {
     }
   }
 
-  // Simulate real-time updates (will be replaced with WebSocket)
+  const startPolling = () => {
+    if (pollingInterval.value) return
+    
+    // Poll lock data every 3 seconds
+    pollingInterval.value = setInterval(async () => {
+      await fetchLocks()
+    }, 3000)
+    
+    // Poll lock status every 30 seconds
+    statusInterval.value = setInterval(async () => {
+      await fetchLockStatus()
+    }, 30000)
+  }
+
+  const stopPolling = () => {
+    if (pollingInterval.value) {
+      clearInterval(pollingInterval.value)
+      pollingInterval.value = null
+    }
+    
+    if (statusInterval.value) {
+      clearInterval(statusInterval.value)
+      statusInterval.value = null
+    }
+  }
+
+  // Legacy method for compatibility
   const startRealTimeUpdates = () => {
-    setInterval(() => {
-      // Randomly update battery levels
-      locks.value.forEach(lock => {
-        if (Math.random() < 0.1 && lock.status) { // 10% chance
-          lock.status.battery_level = Math.max(0, lock.status.battery_level - Math.floor(Math.random() * 2))
-        }
-      })
-      
-      // Randomly change online status
-      if (Math.random() < 0.05) { // 5% chance
-        const randomLock = locks.value[Math.floor(Math.random() * locks.value.length)]
-        if (randomLock) {
-          randomLock.is_online = !randomLock.is_online
-          
-          if (!randomLock.is_online) {
-            toast.warning(`${randomLock.name} went offline`)
-          } else {
-            toast.success(`${randomLock.name} is back online`)
-          }
-        }
-      }
-    }, 10000) // Every 10 seconds
+    startPolling()
   }
 
   return {
     locks,
+    lockStatus,
     loading,
     error,
     onlineLocks,
@@ -128,8 +203,16 @@ export const useLocksStore = defineStore('locks', () => {
     unlockedCount,
     lowBatteryLocks,
     fetchLocks,
+    fetchLockStatus,
     toggleLock,
+    controlLock,
+    lockAll,
+    unlockAll,
+    getOfflineLocks,
+    getLowBatteryLocks,
     updateLockStatus,
+    startPolling,
+    stopPolling,
     startRealTimeUpdates
   }
 })

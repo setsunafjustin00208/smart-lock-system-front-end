@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/services/api'
+import { notificationManager } from '@/services/notificationManager'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -29,6 +30,11 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('refresh_token', refresh_token)
       localStorage.setItem('user', JSON.stringify(userData))
       
+      // Start notification manager after successful login
+      setTimeout(() => {
+        notificationManager.start()
+      }, 1000)
+      
       return { success: true, user: userData }
     } catch (error) {
       console.error('Login error:', error)
@@ -41,6 +47,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async () => {
     try {
+      // Stop notification manager first
+      notificationManager.stop()
+      
       if (token.value) {
         await api.post('/auth/logout')
       }
@@ -53,6 +62,11 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.removeItem('auth_token')
       localStorage.removeItem('refresh_token')
       localStorage.removeItem('user')
+      
+      // Clear notifications store
+      const { useNotificationsStore } = await import('./notifications')
+      const notificationsStore = useNotificationsStore()
+      notificationsStore.clearNotifications()
     }
   }
 
@@ -63,6 +77,11 @@ export const useAuthStore = defineStore('auth', () => {
     if (savedToken && savedUser) {
       token.value = savedToken
       user.value = JSON.parse(savedUser)
+      
+      // Start notification manager for existing session
+      setTimeout(() => {
+        notificationManager.start()
+      }, 2000)
     }
   }
 

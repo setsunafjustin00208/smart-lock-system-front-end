@@ -3,7 +3,7 @@
     <div class="navbar-brand">
       <router-link class="navbar-item" to="/">
         <i class="fas fa-lock has-text-white"></i>
-        <span class="has-text-white ml-2 is-size-5 has-text-weight-bold">SmartLock</span>
+        <span class="has-text-white ml-2 is-size-5 has-text-weight-bold">{{ appName }}</span>
       </router-link>
       
       <a 
@@ -45,15 +45,9 @@
       <div class="navbar-end">
         <div class="navbar-item">
           <div class="buttons">
-            <button 
-              class="button is-small is-outlined is-white"
-              @click="toggleNotifications"
-            >
-              <i class="fas fa-bell"></i>
-              <span v-if="notificationsStore.unreadCount > 0" class="tag is-danger is-small ml-1">
-                {{ notificationsStore.unreadCount }}
-              </span>
-            </button>
+            <!-- Notification Center -->
+            <NotificationCenter />
+            
             <div class="dropdown is-right" :class="{ 'is-active': showUserMenu }">
               <div class="dropdown-trigger">
                 <button 
@@ -61,7 +55,7 @@
                   @click="showUserMenu = !showUserMenu"
                 >
                   <i class="fas fa-user mr-1"></i>
-                  <span>{{ authStore.user?.name }}</span>
+                  <span>{{ authStore.user?.username }}</span>
                   <i class="fas fa-angle-down ml-1"></i>
                 </button>
               </div>
@@ -82,26 +76,22 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
-import { useNotificationsStore } from '../../stores/notifications'
+import NotificationCenter from './NotificationCenter.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const notificationsStore = useNotificationsStore()
 
 const showMobileMenu = ref(false)
 const showUserMenu = ref(false)
 
+const appName = computed(() => __APP_NAME__)
+
 const logout = async () => {
   await authStore.logout()
   router.push('/login')
-}
-
-const toggleNotifications = () => {
-  // This would open a notifications panel
-  console.log('Toggle notifications')
 }
 </script>
 

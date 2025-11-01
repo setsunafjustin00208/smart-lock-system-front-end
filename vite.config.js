@@ -4,7 +4,11 @@ import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   plugins: [vue()],
-  base: '/smart-lock-system-front-end/',
+  base: '/lockey/',
+  define: {
+    __APP_NAME__: JSON.stringify(process.env.VITE_APP_NAME || 'Lockey'),
+    __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || '3.0.0')
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

@@ -11,12 +11,13 @@ import 'vue-toastification/dist/index.css'
 import './assets/main.css'
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
 app.use(Toast, {
   position: 'top-right',
-  timeout: 3000,
+  timeout: 4000,
   closeOnClick: true,
   pauseOnFocusLoss: true,
   pauseOnHover: true,
@@ -26,7 +27,14 @@ app.use(Toast, {
   hideProgressBar: false,
   closeButton: 'button',
   icon: true,
-  rtl: false
+  rtl: false,
+  maxToasts: 5,
+  newestOnTop: true
 })
+
+// Initialize auth check
+import { useAuthStore } from './stores/auth'
+const authStore = useAuthStore()
+authStore.checkAuth()
 
 app.mount('#app')

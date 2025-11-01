@@ -72,12 +72,12 @@
               <div class="level is-mobile">
                 <div class="level-left">
                   <div>
-                    <p class="heading has-text-white-ter">Low Battery</p>
-                    <p class="title is-4-mobile is-3-desktop has-text-danger">{{ locksStore.lowBatteryLocks.length }}</p>
+                    <p class="heading has-text-white-ter">Offline</p>
+                    <p class="title is-4-mobile is-3-desktop has-text-danger">{{ locksStore.offlineLocks.length }}</p>
                   </div>
                 </div>
                 <div class="level-right">
-                  <i class="fas fa-battery-quarter is-size-3-mobile is-size-2-desktop has-text-danger"></i>
+                  <i class="fas fa-wifi-slash is-size-3-mobile is-size-2-desktop has-text-danger"></i>
                 </div>
               </div>
             </div>

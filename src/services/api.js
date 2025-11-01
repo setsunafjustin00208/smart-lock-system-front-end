@@ -7,7 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 10000
+  timeout: 30000
 })
 
 // Request interceptor to add auth token
@@ -17,6 +17,16 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    
+    // Add request priority for critical endpoints
+    if (config.url?.includes('/auth/login') || config.url?.includes('/locks')) {
+      config.priority = 'high'
+    } else if (config.url?.includes('/notifications')) {
+      config.priority = 'low'
+      // Shorter timeout for notifications to prevent blocking
+      config.timeout = 8000
+    }
+    
     return config
   },
   error => Promise.reject(error)
@@ -27,6 +37,12 @@ api.interceptors.response.use(
   response => response,
   async error => {
     const originalRequest = error.config
+
+    // Don't retry notification requests to prevent cascading failures
+    if (originalRequest.url?.includes('/notifications')) {
+      console.warn('Notification request failed:', error.message)
+      return Promise.reject(error)
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
@@ -46,7 +62,8 @@ api.interceptors.response.use(
         } catch (refreshError) {
           localStorage.removeItem('auth_token')
           localStorage.removeItem('refresh_token')
-          window.location.href = '/smart-lock-system-front-end/login'
+          localStorage.removeItem('user')
+          window.location.href = '/lockey/login'
         }
       }
     }

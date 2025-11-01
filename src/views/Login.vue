@@ -7,7 +7,7 @@
             <div class="card-content">
               <div class="has-text-centered mb-5">
                 <i class="fas fa-lock is-size-1 has-text-white mb-3"></i>
-                <h1 class="title is-3 has-text-white">SmartLock System</h1>
+                <h1 class="title is-3 has-text-white">{{ appName }}</h1>
                 <p class="subtitle is-6 has-text-white-ter">Secure Access Management</p>
               </div>
               
@@ -67,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useToast } from 'vue-toastification'
@@ -77,6 +77,7 @@ const authStore = useAuthStore()
 const toast = useToast()
 
 const isLoading = ref(false)
+const appName = computed(() => __APP_NAME__)
 const credentials = reactive({
   username: '',
   password: ''
