@@ -2,17 +2,40 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="/smart-lock-system-front-end/favicon.ico">
+    <link rel="icon" href="/lockey/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Web-based Multi-Smart Lock System - Secure Access Management">
+    <meta name="description" content="Lockey - Smart Lock Management System">
     <meta name="theme-color" content="#667eea">
-    <title>SmartLock System</title>
-    <script type="module" crossorigin src="/smart-lock-system-front-end/assets/index-DIcJsr_G.js"></script>
-    <link rel="modulepreload" crossorigin href="/smart-lock-system-front-end/assets/vendor-BrumQkvr.js">
-    <link rel="modulepreload" crossorigin href="/smart-lock-system-front-end/assets/utils-Y4WpDaR5.js">
-    <link rel="stylesheet" crossorigin href="/smart-lock-system-front-end/assets/index-B8DpRuaS.css">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/lockey/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Lockey">
+    <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+    
+    <title>Lockey</title>
+    <script type="module" crossorigin src="/lockey/assets/index-DZphYw7L.js"></script>
+    <link rel="modulepreload" crossorigin href="/lockey/assets/vendor-C24Hr-iP.js">
+    <link rel="modulepreload" crossorigin href="/lockey/assets/utils-D5aLFx-s.js">
+    <link rel="stylesheet" crossorigin href="/lockey/assets/index-D_WG6UN_.css">
   </head>
   <body>
     <div id="app"></div>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('SW registered: ', registration)
+            })
+            .catch(registrationError => {
+              console.log('SW registration failed: ', registrationError)
+            })
+        })
+      }
+    </script>
   </body>
 </html>
