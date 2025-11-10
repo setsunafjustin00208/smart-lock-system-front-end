@@ -39,7 +39,7 @@
                       required
                     >
                     <span class="icon is-small is-left">
-                      <i class="fas fa-lock"></i>
+                      <i class="fas fa-lock black-login-icon"></i>
                     </span>
                   </div>
                 </div>

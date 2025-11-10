@@ -35,7 +35,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory('/lockey/'),
+  history: createWebHistory('/'),
   routes
 })
 

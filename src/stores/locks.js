@@ -164,15 +164,15 @@ export const useLocksStore = defineStore('locks', () => {
   const startPolling = () => {
     if (pollingInterval.value) return
     
-    // Poll lock data every 3 seconds
+    // Poll lock data every 30 seconds (reduced from 3 seconds)
     pollingInterval.value = setInterval(async () => {
       await fetchLocks()
-    }, 3000)
+    }, 30000)
     
-    // Poll lock status every 30 seconds
+    // Poll lock status every 10 seconds for real-time updates
     statusInterval.value = setInterval(async () => {
       await fetchLockStatus()
-    }, 30000)
+    }, 10000)
   }
 
   const stopPolling = () => {

@@ -17,13 +17,17 @@ export const useNotificationsStore = defineStore('notifications', () => {
     
     try {
       loading.value = true
-      const params = unreadOnly ? '?unread_only=true&limit=10' : '?limit=50'
+      const params = {}
+      if (unreadOnly) {
+        params.unread_only = true
+      }
       
       // Add timeout for notification requests
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 5000)
       
-      const response = await api.get(`/notifications${params}`, {
+      const response = await api.get('/notifications', {
+        params,
         signal: controller.signal
       })
       

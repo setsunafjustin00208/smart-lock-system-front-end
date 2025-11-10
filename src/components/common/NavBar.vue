@@ -97,9 +97,17 @@ const logout = async () => {
 
 <style scoped>
 .navbar {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Ensure Bulma color helpers work */
+.navbar-item.has-text-white,
+.navbar .has-text-white,
+.navbar .button.has-text-white,
+.navbar .button.is-ghost.has-text-white {
+  color: white !important;
 }
 
 .navbar-item:hover {
@@ -110,25 +118,27 @@ const logout = async () => {
   background-color: rgba(255, 255, 255, 0.2) !important;
 }
 
+.button.is-outlined.is-white {
+  color: white !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.button.is-outlined.is-white:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
 /* Mobile menu improvements */
 @media screen and (max-width: 1023px) {
   .navbar-menu {
-    background-color: rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
     border-radius: 0 0 12px 12px;
     margin-top: 1px;
   }
   
-  .navbar-menu .navbar-item {
-    color: #363636 !important;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  }
-  
   .navbar-menu .navbar-item:hover {
-    background-color: rgba(102, 126, 234, 0.1) !important;
-    color: #667eea !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
   }
   
   .navbar-menu .navbar-end .navbar-item {

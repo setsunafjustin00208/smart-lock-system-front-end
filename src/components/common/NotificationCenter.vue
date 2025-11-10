@@ -197,6 +197,11 @@ onUnmounted(() => {
   position: relative;
 }
 
+/* Force notification button to be white in navbar */
+.button.is-ghost.has-text-white {
+  color: white !important;
+}
+
 .notification-badge {
   position: absolute;
   top: -5px;

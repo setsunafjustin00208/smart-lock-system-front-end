@@ -10,33 +10,55 @@ const api = axios.create({
   timeout: 30000
 })
 
+// Check if token is expired
+const isTokenExpired = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return Date.now() >= payload.exp * 1000
+  } catch {
+    return true
+  }
+}
+
 // Request interceptor to add auth token
 api.interceptors.request.use(
   config => {
     const token = localStorage.getItem('auth_token')
     if (token) {
+      // Check if token is expired before making request
+      if (isTokenExpired(token)) {
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('refresh_token')
+        localStorage.removeItem('user')
+        window.location.href = '/lockey/login'
+        return Promise.reject(new Error('Token expired'))
+      }
       config.headers.Authorization = `Bearer ${token}`
     }
     
-    // Add request priority for critical endpoints
-    if (config.url?.includes('/auth/login') || config.url?.includes('/locks')) {
-      config.priority = 'high'
-    } else if (config.url?.includes('/notifications')) {
-      config.priority = 'low'
-      // Shorter timeout for notifications to prevent blocking
-      config.timeout = 8000
-    }
+    // Add retry logic for tunnel instability
+    config.retry = config.retry || 0
+    config.retryDelay = config.retryDelay || 1000
     
     return config
   },
   error => Promise.reject(error)
 )
 
-// Response interceptor for token refresh
+// Response interceptor for token refresh and retry logic
 api.interceptors.response.use(
   response => response,
   async error => {
     const originalRequest = error.config
+
+    // Handle network errors with retry
+    if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
+      if (originalRequest.retry < 2) {
+        originalRequest.retry += 1
+        await new Promise(resolve => setTimeout(resolve, originalRequest.retryDelay))
+        return api(originalRequest)
+      }
+    }
 
     // Don't retry notification requests to prevent cascading failures
     if (originalRequest.url?.includes('/notifications')) {
@@ -45,27 +67,12 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-      
-      const refreshToken = localStorage.getItem('refresh_token')
-      if (refreshToken) {
-        try {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refresh_token: refreshToken
-          })
-          
-          const newToken = response.data.data.token
-          localStorage.setItem('auth_token', newToken)
-          originalRequest.headers.Authorization = `Bearer ${newToken}`
-          
-          return api(originalRequest)
-        } catch (refreshError) {
-          localStorage.removeItem('auth_token')
-          localStorage.removeItem('refresh_token')
-          localStorage.removeItem('user')
-          window.location.href = '/lockey/login'
-        }
-      }
+      // Token expired, redirect to login
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user')
+      window.location.href = '/lockey/login'
+      return Promise.reject(error)
     }
     
     return Promise.reject(error)
