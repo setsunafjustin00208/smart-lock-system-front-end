@@ -9,38 +9,44 @@
         </div>
         <div class="lock-info">
           <h3 class="lock-name">{{ lock.name }}</h3>
-          <p class="lock-location">{{ lock.location }}</p>
+          <p class="lock-location">{{ lock.location || 'Smart Lock' }}</p>
         </div>
         <div class="battery-display">
           <i class="fas fa-battery" :class="batteryIconClass"></i>
-          <span class="battery-text">{{ lock.batteryLevel }}%</span>
+          <span class="battery-text">{{ batteryLevel }}%</span>
         </div>
       </div>
       
-      <!-- Action Button -->
+      <!-- Action Button with Loading State -->
       <div class="lock-action">
         <button 
           class="action-button"
           :class="actionButtonClass"
           @click="toggleLock"
-          :disabled="isLoading || lock.status === 'offline'"
+          :disabled="isLoading || !lock.is_online"
         >
-          <i :class="lock.isLocked ? 'fas fa-unlock' : 'fas fa-lock'"></i>
-          <span>{{ lock.isLocked ? 'Unlock' : 'Lock' }}</span>
-          <div v-if="isLoading" class="loading-spinner"></div>
+          <template v-if="isLoading">
+            <div class="loading-spinner"></div>
+            <span>Processing...</span>
+          </template>
+          <template v-else>
+            <i :class="isLocked ? 'fas fa-unlock' : 'fas fa-lock'"></i>
+            <span>{{ isLocked ? 'Unlock' : 'Lock' }}</span>
+          </template>
         </button>
       </div>
       
-      <!-- Last Activity (simplified) -->
+      <!-- Hardware ID and Last Activity -->
       <div class="lock-footer">
-        <span class="last-activity">{{ formatDate(lock.lastActivity) }}</span>
+        <div class="hardware-id">{{ lock.hardware_id }}</div>
+        <span class="last-activity">{{ formatDate(lock.updated_at) }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useLocksStore } from '../../stores/locks'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -52,47 +58,51 @@ const props = defineProps({
 })
 
 const locksStore = useLocksStore()
-const isLoading = ref(false)
+
+// Use store's per-lock loading state
+const isLoading = computed(() => locksStore.isLockLoading(props.lock.id))
+
+// Lock status from API structure
+const isLocked = computed(() => props.lock.status_data?.is_locked ?? true)
+const batteryLevel = computed(() => props.lock.status_data?.battery_level ?? 100)
 
 const lockStatusClass = computed(() => ({
-  'lock-card--locked': props.lock.isLocked && props.lock.status === 'online',
-  'lock-card--unlocked': !props.lock.isLocked && props.lock.status === 'online',
-  'lock-card--offline': props.lock.status === 'offline'
+  'lock-card--locked': isLocked.value && props.lock.is_online,
+  'lock-card--unlocked': !isLocked.value && props.lock.is_online,
+  'lock-card--offline': !props.lock.is_online,
+  'lock-card--loading': isLoading.value
 }))
 
 const iconClass = computed(() => ({
-  'lock-icon--locked': props.lock.isLocked && props.lock.status === 'online',
-  'lock-icon--unlocked': !props.lock.isLocked && props.lock.status === 'online',
-  'lock-icon--offline': props.lock.status === 'offline'
+  'lock-icon--locked': isLocked.value && props.lock.is_online,
+  'lock-icon--unlocked': !isLocked.value && props.lock.is_online,
+  'lock-icon--offline': !props.lock.is_online
 }))
 
 const statusIndicatorClass = computed(() => ({
-  'status-indicator--online': props.lock.status === 'online',
-  'status-indicator--offline': props.lock.status === 'offline'
+  'status-indicator--online': props.lock.is_online,
+  'status-indicator--offline': !props.lock.is_online
 }))
 
 const batteryIconClass = computed(() => ({
-  'battery-high': props.lock.batteryLevel > 50,
-  'battery-medium': props.lock.batteryLevel > 20 && props.lock.batteryLevel <= 50,
-  'battery-low': props.lock.batteryLevel <= 20
+  'battery-high': batteryLevel.value > 50,
+  'battery-medium': batteryLevel.value > 20 && batteryLevel.value <= 50,
+  'battery-low': batteryLevel.value <= 20
 }))
 
 const actionButtonClass = computed(() => ({
-  'action-button--lock': !props.lock.isLocked && props.lock.status === 'online',
-  'action-button--unlock': props.lock.isLocked && props.lock.status === 'online',
-  'action-button--disabled': props.lock.status === 'offline'
+  'action-button--lock': !isLocked.value && props.lock.is_online && !isLoading.value,
+  'action-button--unlock': isLocked.value && props.lock.is_online && !isLoading.value,
+  'action-button--disabled': !props.lock.is_online,
+  'action-button--loading': isLoading.value
 }))
 
 const toggleLock = async () => {
-  isLoading.value = true
-  try {
-    await locksStore.toggleLock(props.lock.id)
-  } finally {
-    isLoading.value = false
-  }
+  await locksStore.toggleLock(props.lock.id)
 }
 
 const formatDate = (date) => {
+  if (!date) return 'Never'
   return formatDistanceToNow(new Date(date), { addSuffix: true })
 }
 </script>
@@ -128,6 +138,11 @@ const formatDate = (date) => {
 .lock-card--offline {
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
   border-color: rgba(239, 68, 68, 0.3);
+}
+
+.lock-card--loading {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 .card-content {
@@ -286,6 +301,13 @@ const formatDate = (date) => {
   box-shadow: 0 8px 20px rgba(251, 191, 36, 0.4);
 }
 
+.action-button--loading {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  cursor: not-allowed;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
 .action-button--disabled {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.5);
@@ -293,7 +315,6 @@ const formatDate = (date) => {
 }
 
 .loading-spinner {
-  position: absolute;
   width: 20px;
   height: 20px;
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -305,7 +326,15 @@ const formatDate = (date) => {
 /* Footer */
 .lock-footer {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hardware-id {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: monospace;
 }
 
 .last-activity {

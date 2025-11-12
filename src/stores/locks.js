@@ -1,153 +1,160 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from './auth'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lockey.ngrok.io'
 
 export const useLocksStore = defineStore('locks', () => {
   const toast = useToast()
-  const locks = ref([
-    {
-      id: 1,
-      name: 'Front Door',
-      location: 'Main Entrance',
-      isLocked: true,
-      status: 'online',
-      batteryLevel: 85,
-      lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      hardwareId: 'ESP32-001'
-    },
-    {
-      id: 2,
-      name: 'Back Door',
-      location: 'Garden Entrance',
-      isLocked: false,
-      status: 'online',
-      batteryLevel: 92,
-      lastActivity: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      hardwareId: 'ESP32-002'
-    },
-    {
-      id: 3,
-      name: 'Garage Door',
-      location: 'Garage',
-      isLocked: true,
-      status: 'offline',
-      batteryLevel: 23,
-      lastActivity: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      hardwareId: 'ESP32-003'
-    },
-    {
-      id: 4,
-      name: 'Office Door',
-      location: 'Home Office',
-      isLocked: false,
-      status: 'online',
-      batteryLevel: 67,
-      lastActivity: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-      hardwareId: 'ESP32-004'
-    }
-  ])
+  const authStore = useAuthStore()
   
+  const locks = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const lockLoadingStates = ref({}) // Per-lock loading states
+  
+  let pollingInterval = null
 
   const onlineLocks = computed(() => 
-    locks.value.filter(lock => lock.status === 'online')
+    locks.value.filter(lock => lock.is_online)
   )
 
   const offlineLocks = computed(() => 
-    locks.value.filter(lock => lock.status === 'offline')
+    locks.value.filter(lock => !lock.is_online)
   )
 
   const lockedCount = computed(() => 
-    locks.value.filter(lock => lock.isLocked).length
+    locks.value.filter(lock => lock.status_data?.is_locked).length
   )
 
   const unlockedCount = computed(() => 
-    locks.value.filter(lock => !lock.isLocked).length
+    locks.value.filter(lock => !lock.status_data?.is_locked).length
   )
 
   const lowBatteryLocks = computed(() => 
-    locks.value.filter(lock => lock.batteryLevel < 30)
+    locks.value.filter(lock => (lock.status_data?.battery_level || 100) < 30)
   )
 
+  // Fetch locks from API
+  const fetchLocks = async () => {
+    if (!authStore.token) return
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/locks`, {
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) throw new Error('Failed to fetch locks')
+      
+      const data = await response.json()
+      locks.value = data
+      error.value = null
+      
+    } catch (err) {
+      console.error('Fetch locks error:', err)
+      error.value = err.message
+    }
+  }
+
+  // Control lock with loading state
   const toggleLock = async (lockId) => {
     const lock = locks.value.find(l => l.id === lockId)
-    if (!lock) return
-
-    if (lock.status === 'offline') {
+    if (!lock || !lock.is_online) {
       toast.error('Cannot control offline lock')
       return
     }
 
-    loading.value = true
+    // Set loading state for this specific lock
+    lockLoadingStates.value[lockId] = true
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const command = lock.status_data?.is_locked ? 'unlock' : 'lock'
       
-      lock.isLocked = !lock.isLocked
-      lock.lastActivity = new Date().toISOString()
-      
-      const action = lock.isLocked ? 'locked' : 'unlocked'
-      toast.success(`${lock.name} ${action} successfully`)
-      
-      // Simulate real-time update
-      setTimeout(() => {
-        updateLockStatus(lockId, { 
-          lastActivity: new Date().toISOString() 
+      const response = await fetch(`${API_BASE_URL}/api/locks/${lockId}/control`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          command: command,
+          reason: `User ${command} via UI`
         })
-      }, 500)
-      
-    } catch (err) {
-      error.value = err.message
-      toast.error('Failed to control lock')
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const updateLockStatus = (lockId, status) => {
-    const lock = locks.value.find(l => l.id === lockId)
-    if (lock) {
-      Object.assign(lock, status)
-    }
-  }
-
-  // Simulate real-time updates
-  const startRealTimeUpdates = () => {
-    setInterval(() => {
-      // Randomly update battery levels
-      locks.value.forEach(lock => {
-        if (Math.random() < 0.1) { // 10% chance
-          lock.batteryLevel = Math.max(0, lock.batteryLevel - Math.floor(Math.random() * 2))
-        }
       })
       
-      // Randomly change status
-      if (Math.random() < 0.05) { // 5% chance
-        const randomLock = locks.value[Math.floor(Math.random() * locks.value.length)]
-        randomLock.status = randomLock.status === 'online' ? 'offline' : 'online'
-        
-        if (randomLock.status === 'offline') {
-          toast.warning(`${randomLock.name} went offline`)
-        } else {
-          toast.success(`${randomLock.name} is back online`)
+      if (!response.ok) throw new Error('Command failed')
+      
+      toast.success(`${command} command sent to ${lock.name}`)
+      
+      // Loading state will be cleared when status updates via polling
+      
+    } catch (err) {
+      console.error('Lock command error:', err)
+      lockLoadingStates.value[lockId] = false
+      toast.error(`Failed to control ${lock.name}`)
+    }
+  }
+
+  // Clear loading state when lock status changes
+  const clearLoadingState = (lockId) => {
+    if (lockLoadingStates.value[lockId]) {
+      lockLoadingStates.value[lockId] = false
+    }
+  }
+
+  // Start polling with reduced frequency (2 seconds)
+  const startPolling = () => {
+    if (pollingInterval) return
+    
+    // Initial fetch
+    fetchLocks()
+    
+    // Poll every 2 seconds for responsive UI
+    pollingInterval = setInterval(async () => {
+      const previousLocks = [...locks.value]
+      await fetchLocks()
+      
+      // Clear loading states for locks that changed status
+      locks.value.forEach(lock => {
+        const prevLock = previousLocks.find(p => p.id === lock.id)
+        if (prevLock && prevLock.status_data?.is_locked !== lock.status_data?.is_locked) {
+          clearLoadingState(lock.id)
         }
-      }
-    }, 10000) // Every 10 seconds
+      })
+    }, 2000)
+  }
+
+  const stopPolling = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+      pollingInterval = null
+    }
+  }
+
+  // Check if specific lock is loading
+  const isLockLoading = (lockId) => {
+    return lockLoadingStates.value[lockId] || false
   }
 
   return {
     locks,
     loading,
     error,
+    lockLoadingStates,
     onlineLocks,
     offlineLocks,
     lockedCount,
     unlockedCount,
     lowBatteryLocks,
     toggleLock,
-    updateLockStatus,
-    startRealTimeUpdates
+    fetchLocks,
+    startPolling,
+    stopPolling,
+    isLockLoading,
+    clearLoadingState
   }
 })

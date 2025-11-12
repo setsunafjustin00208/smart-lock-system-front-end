@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useLocksStore } from '../stores/locks'
 import LockGrid from '../components/locks/LockGrid.vue'
 
@@ -50,15 +50,26 @@ const filteredLocks = computed(() => {
   let filtered = locksStore.locks
 
   if (filterStatus.value !== 'all') {
-    filtered = filtered.filter(lock => lock.status === filterStatus.value)
+    const isOnline = filterStatus.value === 'online'
+    filtered = filtered.filter(lock => lock.is_online === isOnline)
   }
 
   if (filterLocked.value !== 'all') {
     const isLocked = filterLocked.value === 'locked'
-    filtered = filtered.filter(lock => lock.isLocked === isLocked)
+    filtered = filtered.filter(lock => lock.status_data?.is_locked === isLocked)
   }
 
   return filtered
+})
+
+// Start polling when component mounts
+onMounted(() => {
+  locksStore.startPolling()
+})
+
+// Stop polling when component unmounts
+onUnmounted(() => {
+  locksStore.stopPolling()
 })
 </script>
 

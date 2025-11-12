@@ -151,7 +151,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useLocksStore } from '../stores/locks'
 import { useToast } from 'vue-toastification'
 import LockGrid from '../components/locks/LockGrid.vue'
@@ -201,7 +201,12 @@ const refreshStatus = async () => {
 
 onMounted(() => {
   // Start real-time updates
-  locksStore.startRealTimeUpdates()
+  locksStore.startPolling()
+})
+
+onUnmounted(() => {
+  // Stop polling when leaving dashboard
+  locksStore.stopPolling()
 })
 </script>
 
