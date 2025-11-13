@@ -7,7 +7,7 @@
             <div class="card-content">
               <div class="has-text-centered mb-5">
                 <i class="fas fa-lock is-size-1 has-text-white mb-3"></i>
-                <h1 class="title is-3 has-text-white">SmartLock System</h1>
+                <h1 class="title is-3 has-text-white">{{ appName }}</h1>
                 <p class="subtitle is-6 has-text-white-ter">Secure Access Management</p>
               </div>
               
@@ -39,7 +39,7 @@
                       required
                     >
                     <span class="icon is-small is-left">
-                      <i class="fas fa-lock"></i>
+                      <i class="fas fa-lock black-login-icon"></i>
                     </span>
                   </div>
                 </div>
@@ -57,12 +57,6 @@
                     </button>
                   </div>
                 </div>
-                
-                <div class="has-text-centered mt-4">
-                  <p class="has-text-white-ter is-size-7">
-                    Demo credentials: admin / admin
-                  </p>
-                </div>
               </form>
             </div>
           </div>
@@ -73,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useToast } from 'vue-toastification'
@@ -83,6 +77,7 @@ const authStore = useAuthStore()
 const toast = useToast()
 
 const isLoading = ref(false)
+const appName = computed(() => __APP_NAME__)
 const credentials = reactive({
   username: '',
   password: ''
@@ -247,16 +242,6 @@ const handleLogin = async () => {
 
 .button.is-loading::after {
   border-color: transparent transparent white white;
-}
-
-/* Demo credentials styling */
-.has-text-white-ter {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-family: 'Courier New', monospace;
-  font-weight: 500;
 }
 
 /* Animation for card entrance */

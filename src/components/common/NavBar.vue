@@ -3,7 +3,7 @@
     <div class="navbar-brand">
       <router-link class="navbar-item" to="/">
         <i class="fas fa-lock has-text-white"></i>
-        <span class="has-text-white ml-2 is-size-5 has-text-weight-bold">SmartLock</span>
+        <span class="has-text-white ml-2 is-size-5 has-text-weight-bold">{{ appName }}</span>
       </router-link>
       
       <a 
@@ -45,15 +45,9 @@
       <div class="navbar-end">
         <div class="navbar-item">
           <div class="buttons">
-            <button 
-              class="button is-small is-outlined is-white"
-              @click="toggleNotifications"
-            >
-              <i class="fas fa-bell"></i>
-              <span v-if="notificationsStore.unreadCount > 0" class="tag is-danger is-small ml-1">
-                {{ notificationsStore.unreadCount }}
-              </span>
-            </button>
+            <!-- Notification Center -->
+            <NotificationCenter />
+            
             <div class="dropdown is-right" :class="{ 'is-active': showUserMenu }">
               <div class="dropdown-trigger">
                 <button 
@@ -61,7 +55,7 @@
                   @click="showUserMenu = !showUserMenu"
                 >
                   <i class="fas fa-user mr-1"></i>
-                  <span>{{ authStore.user?.name }}</span>
+                  <span>{{ authStore.user?.username }}</span>
                   <i class="fas fa-angle-down ml-1"></i>
                 </button>
               </div>
@@ -82,34 +76,38 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
-import { useNotificationsStore } from '../../stores/notifications'
+import NotificationCenter from './NotificationCenter.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const notificationsStore = useNotificationsStore()
 
 const showMobileMenu = ref(false)
 const showUserMenu = ref(false)
 
-const logout = () => {
-  authStore.logout()
-  router.push('/login')
-}
+const appName = computed(() => __APP_NAME__)
 
-const toggleNotifications = () => {
-  // This would open a notifications panel
-  console.log('Toggle notifications')
+const logout = async () => {
+  await authStore.logout()
+  router.push('/login')
 }
 </script>
 
 <style scoped>
 .navbar {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Ensure Bulma color helpers work */
+.navbar-item.has-text-white,
+.navbar .has-text-white,
+.navbar .button.has-text-white,
+.navbar .button.is-ghost.has-text-white {
+  color: white !important;
 }
 
 .navbar-item:hover {
@@ -120,25 +118,27 @@ const toggleNotifications = () => {
   background-color: rgba(255, 255, 255, 0.2) !important;
 }
 
+.button.is-outlined.is-white {
+  color: white !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.button.is-outlined.is-white:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
 /* Mobile menu improvements */
 @media screen and (max-width: 1023px) {
   .navbar-menu {
-    background-color: rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
     border-radius: 0 0 12px 12px;
     margin-top: 1px;
   }
   
-  .navbar-menu .navbar-item {
-    color: #363636 !important;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  }
-  
   .navbar-menu .navbar-item:hover {
-    background-color: rgba(102, 126, 234, 0.1) !important;
-    color: #667eea !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
   }
   
   .navbar-menu .navbar-end .navbar-item {

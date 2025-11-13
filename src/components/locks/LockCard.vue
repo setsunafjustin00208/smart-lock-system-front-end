@@ -13,7 +13,7 @@
         </div>
         <div class="battery-display">
           <i class="fas fa-battery" :class="batteryIconClass"></i>
-          <span class="battery-text">{{ lock.batteryLevel }}%</span>
+          <span class="battery-text">{{ lock.status?.battery_level || 0 }}%</span>
         </div>
       </div>
       
@@ -23,17 +23,17 @@
           class="action-button"
           :class="actionButtonClass"
           @click="toggleLock"
-          :disabled="isLoading || lock.status === 'offline'"
+          :disabled="isLoading || !lock.is_online"
         >
-          <i :class="lock.isLocked ? 'fas fa-unlock' : 'fas fa-lock'"></i>
-          <span>{{ lock.isLocked ? 'Unlock' : 'Lock' }}</span>
+          <i :class="lock.status?.is_locked ? 'fas fa-unlock' : 'fas fa-lock'"></i>
+          <span>{{ lock.status?.is_locked ? 'Unlock' : 'Lock' }}</span>
           <div v-if="isLoading" class="loading-spinner"></div>
         </button>
       </div>
       
       <!-- Last Activity (simplified) -->
       <div class="lock-footer">
-        <span class="last-activity">{{ formatDate(lock.lastActivity) }}</span>
+        <span class="last-activity">{{ formatDate(lock.status?.last_activity || lock.updated_at) }}</span>
       </div>
     </div>
   </div>
@@ -55,32 +55,35 @@ const locksStore = useLocksStore()
 const isLoading = ref(false)
 
 const lockStatusClass = computed(() => ({
-  'lock-card--locked': props.lock.isLocked && props.lock.status === 'online',
-  'lock-card--unlocked': !props.lock.isLocked && props.lock.status === 'online',
-  'lock-card--offline': props.lock.status === 'offline'
+  'lock-card--locked': props.lock.status?.is_locked && props.lock.is_online,
+  'lock-card--unlocked': !props.lock.status?.is_locked && props.lock.is_online,
+  'lock-card--offline': !props.lock.is_online
 }))
 
 const iconClass = computed(() => ({
-  'lock-icon--locked': props.lock.isLocked && props.lock.status === 'online',
-  'lock-icon--unlocked': !props.lock.isLocked && props.lock.status === 'online',
-  'lock-icon--offline': props.lock.status === 'offline'
+  'lock-icon--locked': props.lock.status?.is_locked && props.lock.is_online,
+  'lock-icon--unlocked': !props.lock.status?.is_locked && props.lock.is_online,
+  'lock-icon--offline': !props.lock.is_online
 }))
 
 const statusIndicatorClass = computed(() => ({
-  'status-indicator--online': props.lock.status === 'online',
-  'status-indicator--offline': props.lock.status === 'offline'
+  'status-indicator--online': props.lock.is_online,
+  'status-indicator--offline': !props.lock.is_online
 }))
 
-const batteryIconClass = computed(() => ({
-  'battery-high': props.lock.batteryLevel > 50,
-  'battery-medium': props.lock.batteryLevel > 20 && props.lock.batteryLevel <= 50,
-  'battery-low': props.lock.batteryLevel <= 20
-}))
+const batteryIconClass = computed(() => {
+  const batteryLevel = props.lock.status?.battery_level || 0
+  return {
+    'battery-high': batteryLevel > 50,
+    'battery-medium': batteryLevel > 20 && batteryLevel <= 50,
+    'battery-low': batteryLevel <= 20
+  }
+})
 
 const actionButtonClass = computed(() => ({
-  'action-button--lock': !props.lock.isLocked && props.lock.status === 'online',
-  'action-button--unlock': props.lock.isLocked && props.lock.status === 'online',
-  'action-button--disabled': props.lock.status === 'offline'
+  'action-button--lock': !props.lock.status?.is_locked && props.lock.is_online,
+  'action-button--unlock': props.lock.status?.is_locked && props.lock.is_online,
+  'action-button--disabled': !props.lock.is_online
 }))
 
 const toggleLock = async () => {

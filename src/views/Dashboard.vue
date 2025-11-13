@@ -3,7 +3,7 @@
     <div class="container is-fluid">
       <div class="columns">
         <div class="column">
-          <h1 class="title is-2 has-text-white mb-5">
+          <h1 class="title is-2 mb-5 has-text-white">
             <i class="fas fa-tachometer-alt mr-3"></i>
             Dashboard
           </h1>
@@ -18,8 +18,8 @@
               <div class="level is-mobile">
                 <div class="level-left">
                   <div>
-                    <p class="heading has-text-white-ter">Total Locks</p>
-                    <p class="title is-4-mobile is-3-desktop has-text-white">{{ locksStore.locks.length }}</p>
+                    <p class="heading">Total Locks</p>
+                    <p class="title is-4-mobile is-3-desktop">{{ locksStore.locks.length }}</p>
                   </div>
                 </div>
                 <div class="level-right">
@@ -36,7 +36,7 @@
               <div class="level is-mobile">
                 <div class="level-left">
                   <div>
-                    <p class="heading has-text-white-ter">Online</p>
+                    <p class="heading">Online</p>
                     <p class="title is-4-mobile is-3-desktop has-text-success">{{ locksStore.onlineLocks.length }}</p>
                   </div>
                 </div>
@@ -54,7 +54,7 @@
               <div class="level is-mobile">
                 <div class="level-left">
                   <div>
-                    <p class="heading has-text-white-ter">Locked</p>
+                    <p class="heading">Locked</p>
                     <p class="title is-4-mobile is-3-desktop has-text-warning">{{ locksStore.lockedCount }}</p>
                   </div>
                 </div>
@@ -72,12 +72,12 @@
               <div class="level is-mobile">
                 <div class="level-left">
                   <div>
-                    <p class="heading has-text-white-ter">Low Battery</p>
-                    <p class="title is-4-mobile is-3-desktop has-text-danger">{{ locksStore.lowBatteryLocks.length }}</p>
+                    <p class="heading">Offline</p>
+                    <p class="title is-4-mobile is-3-desktop has-text-danger">{{ locksStore.offlineLocks.length }}</p>
                   </div>
                 </div>
                 <div class="level-right">
-                  <i class="fas fa-battery-quarter is-size-3-mobile is-size-2-desktop has-text-danger"></i>
+                  <i class="fas fa-wifi-slash is-size-3-mobile is-size-2-desktop has-text-danger"></i>
                 </div>
               </div>
             </div>
@@ -90,7 +90,7 @@
         <div class="column">
           <div class="card glass-effect">
             <div class="card-header">
-              <p class="card-header-title has-text-white">
+              <p class="card-header-title">
                 <i class="fas fa-bolt mr-2"></i>
                 Quick Actions
               </p>
@@ -135,7 +135,7 @@
         <div class="column">
           <div class="card glass-effect">
             <div class="card-header">
-              <p class="card-header-title has-text-white">
+              <p class="card-header-title">
                 <i class="fas fa-history mr-2"></i>
                 Recent Activity
               </p>
@@ -199,7 +199,9 @@ const refreshStatus = async () => {
   isLoading.value = false
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Fetch locks from API
+  await locksStore.fetchLocks()
   // Start real-time updates
   locksStore.startRealTimeUpdates()
 })
@@ -275,6 +277,9 @@ onMounted(() => {
     margin: 0.25rem;
   }
   
+  .title {
+    color: #f5f5f5 !important;
+  }
   .title.is-4-mobile {
     font-size: 1.5rem !important;
   }

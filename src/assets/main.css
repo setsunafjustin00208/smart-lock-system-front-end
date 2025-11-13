@@ -1,3 +1,217 @@
+/* Force Bulma Light Mode */
+html {
+  color-scheme: light !important;
+}
+
+body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: #ffffff !important;
+  min-height: 100vh;
+}
+
+/* Glass morphism background */
+.container, .section, .hero-body {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+/* Cards and components glass effect */
+.card, .box, .panel, .modal-card {
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 15px !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Buttons glass effect */
+.button {
+  background: rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+}
+
+.button:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Login page specific styling */
+.hero-body .container {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(15px) !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+  color: #363636 !important;
+}
+
+/* Force all text to be dark on login page */
+.hero-body *,
+.hero-body .title,
+.hero-body .subtitle,
+.hero-body .label,
+.hero-body p,
+.hero-body span,
+.hero-body div,
+.hero-body h1, .hero-body h2, .hero-body h3 {
+  color: #2c3e50 !important;
+  text-shadow: none !important;
+}
+
+/* Glass effect class with UI background color */
+.card.glass-effect,
+.glass-effect {
+  background: rgba(102, 126, 234, 0.15) !important;
+  backdrop-filter: blur(15px) !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37) !important;
+  color: #ffffff !important;
+}
+
+.glass-effect * {
+  color: #ffffff !important;
+}
+
+/* Force username icon to unset white color */
+.fas.fa-user {
+  color: rgb(69, 65, 65) !important;
+}
+
+.black-login-icon {
+  color: rgb(69, 65, 65) !important;
+}
+
+/* Username and password input icons only */
+.hero-body .field .icon,
+.hero-body .control .icon,
+.hero-body .fa-user,
+.hero-body .fa-lock,
+.hero-body .fa-key {
+  color: #2c3e50 !important;
+}
+
+/* Login form inputs */
+.hero-body .input {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  color: #363636 !important;
+}
+
+.hero-body .input::placeholder {
+  color: rgba(54, 54, 54, 0.6) !important;
+}
+
+/* Override any dark mode styles */
+.has-background-dark,
+.hero.is-dark,
+.navbar.is-dark,
+.footer.is-dark {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+/* Fix text visibility */
+.card-header-title,
+.label,
+.title,
+.subtitle,
+h1, h2, h3, h4, h5, h6,
+p, span, div {
+  color: #ffffff !important;
+}
+
+/* Navigation styling */
+.navbar {
+  background: rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(15px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.navbar-item {
+  color: white !important;
+}
+
+.navbar-item:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+.navbar-brand .navbar-item {
+  color: white !important;
+}
+
+/* Fix notification button specifically */
+.navbar .notification-center .button.is-ghost.has-text-white {
+  color: white !important;
+}
+
+.button.is-outlined.is-white {
+  color: white !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.button.is-outlined.is-white:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+/* Card styling */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #363636 !important;
+}
+
+.card-header-title {
+  color: #363636 !important;
+}
+
+.card-content {
+  color: #363636 !important;
+}
+
+/* Title and heading styles - allow white titles */
+.subtitle {
+  color: #f0ecec !important;
+}
+
+/* Button styles */
+.button {
+  color: #363636 !important;
+}
+
+.button.is-primary {
+  background-color: #3273dc !important;
+  color: white !important;
+}
+
+.button.is-success {
+  background-color: #48c78e !important;
+  color: white !important;
+}
+
+.button.is-warning {
+  background-color: #ffdd57 !important;
+  color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.button.is-danger {
+  background-color: #f14668 !important;
+  color: white !important;
+}
+
+/* Input styles */
+.input, .textarea, .select select {
+  background-color: white !important;
+  color: #363636 !important;
+  border-color: #dbdbdb !important;
+}
+
 /* Custom animations and utilities */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
@@ -23,12 +237,6 @@
   animation: slideIn 0.5s ease-out;
 }
 
-.glass-effect {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
 .status-online {
   color: #48c78e !important;
 }
@@ -38,7 +246,7 @@
 }
 
 .status-warning {
-  color: #ffe08a !important;
+  color: #ffdd57 !important;
 }
 
 /* Responsive utilities */
@@ -50,7 +258,7 @@
 
 /* Loading spinner */
 .loading-spinner {
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  border: 3px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
   border-top: 3px solid #667eea;
   width: 24px;
