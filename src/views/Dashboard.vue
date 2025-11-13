@@ -168,33 +168,16 @@ const recentLocks = computed(() => {
 })
 
 const lockAll = async () => {
-  isLoading.value = true
-  const unlockedLocks = locksStore.locks.filter(lock => !lock.isLocked && lock.status === 'online')
-  
-  for (const lock of unlockedLocks) {
-    await locksStore.toggleLock(lock.id)
-  }
-  
-  toast.success(`Locked ${unlockedLocks.length} locks`)
-  isLoading.value = false
+  await locksStore.lockAll()
 }
 
 const unlockAll = async () => {
-  isLoading.value = true
-  const lockedLocks = locksStore.locks.filter(lock => lock.isLocked && lock.status === 'online')
-  
-  for (const lock of lockedLocks) {
-    await locksStore.toggleLock(lock.id)
-  }
-  
-  toast.success(`Unlocked ${lockedLocks.length} locks`)
-  isLoading.value = false
+  await locksStore.unlockAll()
 }
 
 const refreshStatus = async () => {
   isLoading.value = true
-  // Simulate refresh
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  await locksStore.fetchLocks()
   toast.success('Status refreshed')
   isLoading.value = false
 }

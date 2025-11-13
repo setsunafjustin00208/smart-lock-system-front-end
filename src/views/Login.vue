@@ -1,8 +1,8 @@
 <template>
   <div class="login-container">
     <div class="container">
-      <div class="columns is-centered is-vcentered" style="min-height: 100vh;">
-        <div class="column is-4-desktop is-6-tablet is-10-mobile">
+      <div class="login-wrapper">
+        <div class="login-form-container">
           <div class="card glass-effect">
             <div class="card-content">
               <div class="has-text-centered mb-5">
@@ -195,16 +195,33 @@ const handleLogin = async () => {
   opacity: 0.9;
 }
 
+.login-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.login-form-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+@media screen and (min-width: 769px) {
+  .login-form-container {
+    max-width: 450px;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .login-form-container {
+    max-width: 500px;
+  }
+}
+
 /* Mobile optimizations */
 @media screen and (max-width: 768px) {
-  .login-container {
-    padding: 1rem;
-  }
-  
-  .card {
-    margin: 0;
-  }
-  
   .card-content {
     padding: 2rem 1.5rem;
   }

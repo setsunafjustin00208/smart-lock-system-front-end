@@ -11,6 +11,7 @@ export const useLocksStore = defineStore('locks', () => {
   const error = ref(null)
   const pollingInterval = ref(null)
   const statusInterval = ref(null)
+  const lockLoadingStates = ref({})
 
   const onlineLocks = computed(() => 
     locks.value.filter(lock => lock.is_online)
@@ -28,9 +29,7 @@ export const useLocksStore = defineStore('locks', () => {
     locks.value.filter(lock => !lock.status?.is_locked).length
   )
 
-  const lowBatteryLocks = computed(() => 
-    locks.value.filter(lock => lock.status?.battery_level < 30)
-  )
+
 
   const fetchLocks = async () => {
     loading.value = true
@@ -38,17 +37,57 @@ export const useLocksStore = defineStore('locks', () => {
     
     try {
       const response = await api.get('/locks')
+      const previousLocks = [...locks.value]
+      
       locks.value = response.data.data.map(lock => ({
         ...lock,
         config: JSON.parse(lock.config_data || '{}'),
         status: JSON.parse(lock.status_data || '{}')
       }))
+      
+      // Clear loading states for locks that changed status
+      previousLocks.forEach(prevLock => {
+        const currentLock = locks.value.find(l => l.id === prevLock.id)
+        if (currentLock && lockLoadingStates.value[prevLock.id]) {
+          const prevStatus = prevLock.status?.is_locked
+          const currentStatus = currentLock.status?.is_locked
+          
+          if (prevStatus !== currentStatus) {
+            lockLoadingStates.value[prevLock.id] = false
+          }
+        }
+      })
+      
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch locks'
       toast.error('Failed to load locks')
       console.error('Fetch locks error:', err)
     } finally {
       loading.value = false
+    }
+  }
+
+  const fetchSingleLock = async (lockId) => {
+    try {
+      const response = await api.get(`/locks/${lockId}`)
+      const updatedLock = {
+        ...response.data.data,
+        config: JSON.parse(response.data.data.config_data || '{}'),
+        status: JSON.parse(response.data.data.status_data || '{}')
+      }
+      
+      // Update the specific lock in the array
+      const index = locks.value.findIndex(l => l.id === lockId)
+      if (index !== -1) {
+        locks.value[index] = updatedLock
+        // Clear loading state
+        lockLoadingStates.value[lockId] = false
+      }
+      
+      return updatedLock
+    } catch (err) {
+      console.error('Fetch single lock error:', err)
+      return null
     }
   }
 
@@ -80,32 +119,58 @@ export const useLocksStore = defineStore('locks', () => {
       return
     }
 
-    loading.value = true
+    // Set loading state for specific lock
+    lockLoadingStates.value[lockId] = true
     
     try {
       const action = lock.status?.is_locked ? 'unlock' : 'lock'
+      
+      console.log('Sending request:', {
+        url: `/locks/${lockId}/control`,
+        data: { action: action }
+      })
+      
       const response = await api.post(`/locks/${lockId}/control`, { 
         action: action
       })
       
-      // Update local state
+      console.log('Response:', response.data)
+      
       if (response.data.status === 'success') {
-        lock.status.is_locked = !lock.status.is_locked
-        lock.status.last_activity = new Date().toISOString()
+        toast.success(`${lock.name} command sent`)
+        console.log(`${action} command sent for lock ${lockId}`)
         
-        const actionText = lock.status.is_locked ? 'locked' : 'unlocked'
-        toast.success(`${lock.name} ${actionText} successfully`)
+        // Fetch individual lock status with retries
+        setTimeout(async () => {
+          await fetchSingleLock(lockId)
+        }, 2000)
+        
+        // Retry after 4 seconds if still loading
+        setTimeout(async () => {
+          if (lockLoadingStates.value[lockId]) {
+            await fetchSingleLock(lockId)
+          }
+        }, 4000)
+        
+        // Final retry after 6 seconds
+        setTimeout(async () => {
+          if (lockLoadingStates.value[lockId]) {
+            await fetchSingleLock(lockId)
+            // Force clear loading state after final attempt
+            lockLoadingStates.value[lockId] = false
+          }
+        }, 6000)
       }
       
-      // Refresh locks to get updated data
-      await fetchLocks()
-      
     } catch (err) {
-      error.value = err.response?.data?.message || 'Failed to control lock'
-      toast.error('Failed to control lock')
       console.error('Toggle lock error:', err)
-    } finally {
-      loading.value = false
+      console.error('Error response:', err.response?.data)
+      
+      error.value = err.response?.data?.message || 'Failed to control lock'
+      toast.error(`Failed to control lock: ${err.response?.data?.message || err.message}`)
+      
+      // Clear loading state on error
+      lockLoadingStates.value[lockId] = false
     }
   }
 
@@ -117,10 +182,7 @@ export const useLocksStore = defineStore('locks', () => {
       
       if (response.data.status === 'success') {
         const lockName = locks.value.find(l => l.id === lockId)?.name || 'Lock'
-        toast.success(`${lockName} ${action}ed successfully`)
-        
-        // Refresh locks after action
-        await fetchLocks()
+        toast.success(`${lockName} ${action} command sent`)
         return true
       }
     } catch (error) {
@@ -150,9 +212,7 @@ export const useLocksStore = defineStore('locks', () => {
     return locks.value.filter(lock => !lock.is_online)
   }
 
-  const getLowBatteryLocks = () => {
-    return locks.value.filter(lock => lock.status?.battery_level && lock.status.battery_level < 20)
-  }
+
 
   const updateLockStatus = (lockId, status) => {
     const lock = locks.value.find(l => l.id === lockId)
@@ -162,25 +222,17 @@ export const useLocksStore = defineStore('locks', () => {
   }
 
   const startPolling = () => {
-    if (pollingInterval.value) return
+    if (statusInterval.value) return
     
-    // Poll lock data every 30 seconds (reduced from 3 seconds)
-    pollingInterval.value = setInterval(async () => {
-      await fetchLocks()
-    }, 30000)
+    const statusPollingInterval = parseInt(import.meta.env.VITE_STATUS_POLLING_INTERVAL) || 30000
     
-    // Poll lock status every 10 seconds for real-time updates
+    // Only poll lock status for connectivity checks (30 seconds)
     statusInterval.value = setInterval(async () => {
       await fetchLockStatus()
-    }, 10000)
+    }, statusPollingInterval)
   }
 
   const stopPolling = () => {
-    if (pollingInterval.value) {
-      clearInterval(pollingInterval.value)
-      pollingInterval.value = null
-    }
-    
     if (statusInterval.value) {
       clearInterval(statusInterval.value)
       statusInterval.value = null
@@ -197,19 +249,21 @@ export const useLocksStore = defineStore('locks', () => {
     lockStatus,
     loading,
     error,
+    lockLoadingStates,
     onlineLocks,
     offlineLocks,
     lockedCount,
     unlockedCount,
-    lowBatteryLocks,
+
     fetchLocks,
+    fetchSingleLock,
     fetchLockStatus,
     toggleLock,
     controlLock,
     lockAll,
     unlockAll,
     getOfflineLocks,
-    getLowBatteryLocks,
+
     updateLockStatus,
     startPolling,
     stopPolling,

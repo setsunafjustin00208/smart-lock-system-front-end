@@ -11,10 +11,6 @@
           <h3 class="lock-name">{{ lock.name }}</h3>
           <p class="lock-location">{{ lock.location }}</p>
         </div>
-        <div class="battery-display">
-          <i class="fas fa-battery" :class="batteryIconClass"></i>
-          <span class="battery-text">{{ lock.status?.battery_level || 0 }}%</span>
-        </div>
       </div>
       
       <!-- Action Button -->
@@ -25,9 +21,9 @@
           @click="toggleLock"
           :disabled="isLoading || !lock.is_online"
         >
-          <i :class="lock.status?.is_locked ? 'fas fa-unlock' : 'fas fa-lock'"></i>
-          <span>{{ lock.status?.is_locked ? 'Unlock' : 'Lock' }}</span>
           <div v-if="isLoading" class="loading-spinner"></div>
+          <i v-else :class="lock.status?.is_locked ? 'fas fa-unlock' : 'fas fa-lock'"></i>
+          <span>{{ isLoading ? 'Processing...' : (lock.status?.is_locked ? 'Unlock' : 'Lock') }}</span>
         </button>
       </div>
       
@@ -40,7 +36,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useLocksStore } from '../../stores/locks'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -52,7 +48,10 @@ const props = defineProps({
 })
 
 const locksStore = useLocksStore()
-const isLoading = ref(false)
+
+const isLoading = computed(() => 
+  locksStore.lockLoadingStates[props.lock.id] || false
+)
 
 const lockStatusClass = computed(() => ({
   'lock-card--locked': props.lock.status?.is_locked && props.lock.is_online,
@@ -71,15 +70,6 @@ const statusIndicatorClass = computed(() => ({
   'status-indicator--offline': !props.lock.is_online
 }))
 
-const batteryIconClass = computed(() => {
-  const batteryLevel = props.lock.status?.battery_level || 0
-  return {
-    'battery-high': batteryLevel > 50,
-    'battery-medium': batteryLevel > 20 && batteryLevel <= 50,
-    'battery-low': batteryLevel <= 20
-  }
-})
-
 const actionButtonClass = computed(() => ({
   'action-button--lock': !props.lock.status?.is_locked && props.lock.is_online,
   'action-button--unlock': props.lock.status?.is_locked && props.lock.is_online,
@@ -87,12 +77,7 @@ const actionButtonClass = computed(() => ({
 }))
 
 const toggleLock = async () => {
-  isLoading.value = true
-  try {
-    await locksStore.toggleLock(props.lock.id)
-  } finally {
-    isLoading.value = false
-  }
+  await locksStore.toggleLock(props.lock.id)
 }
 
 const formatDate = (date) => {
@@ -210,39 +195,6 @@ const formatDate = (date) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.battery-display {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-shrink: 0;
-  min-width: 0;
-  max-width: 60px;
-}
-
-.battery-display i {
-  font-size: 1rem;
-  flex-shrink: 0;
-}
-
-.battery-high {
-  color: #22c55e;
-}
-
-.battery-medium {
-  color: #fbbf24;
-}
-
-.battery-low {
-  color: #ef4444;
-}
-
-.battery-text {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  white-space: nowrap;
 }
 
 /* Action Button */

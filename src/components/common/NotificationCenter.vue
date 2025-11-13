@@ -17,7 +17,97 @@
         </button>
       </div>
       
-      <div class="dropdown-menu" id="notification-menu" role="menu">
+      <!-- Mobile Modal -->
+      <Teleport to="body" :disabled="!isMobile">
+        <div v-if="isOpen && isMobile" class="notification-modal" @click="closeModal">
+          <div class="notification-modal-content" @click.stop>
+          <div class="notification-header">
+            <h6 class="title is-6 mb-2">Notifications</h6>
+            <div class="buttons are-small">
+              <button 
+                v-if="unreadCount > 0"
+                class="button is-small is-text"
+                @click="markAllAsRead"
+              >
+                Mark all read
+              </button>
+              <button 
+                class="button is-small is-text"
+                @click="refreshNotifications"
+                :class="{ 'is-loading': loading }"
+              >
+                <i class="fas fa-sync-alt"></i>
+              </button>
+              <button class="button is-small" @click="closeModal">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="notification-list">
+            <div v-if="loading && notifications.length === 0" class="notification-item">
+              <div class="has-text-centered py-4">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p class="mt-2">Loading notifications...</p>
+              </div>
+            </div>
+            
+            <div v-else-if="notifications.length === 0" class="notification-item">
+              <div class="has-text-centered py-4">
+                <i class="fas fa-bell-slash has-text-grey-light"></i>
+                <p class="mt-2 has-text-grey">No notifications</p>
+              </div>
+            </div>
+            
+            <div 
+              v-else
+              v-for="notification in notifications" 
+              :key="notification.id"
+              class="notification-item"
+              :class="{ 'is-unread': !notification.is_read }"
+              @click="handleNotificationClick(notification)"
+            >
+              <div class="notification-content">
+                <div class="notification-icon">
+                  <i :class="getNotificationIcon(notification.type)"></i>
+                </div>
+                <div class="notification-body">
+                  <p class="notification-title">{{ notification.title }}</p>
+                  <p class="notification-message">{{ notification.message }}</p>
+                  <p class="notification-time">{{ formatTime(notification.created_at) }}</p>
+                </div>
+                <div class="notification-actions">
+                  <button 
+                    v-if="!notification.is_read"
+                    class="button is-small is-text"
+                    @click.stop="markAsRead(notification.id)"
+                    title="Mark as read"
+                  >
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button 
+                    class="button is-small is-text has-text-danger"
+                    @click.stop="deleteNotification(notification.id)"
+                    title="Delete"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div v-if="notifications.length > 0" class="notification-footer">
+            <a href="#" @click.prevent="viewAllNotifications">
+              View all notifications
+            </a>
+          </div>
+          </div>
+        </div>
+      </Teleport>
+      
+      <!-- Desktop Dropdown -->
+      <div class="dropdown-menu desktop-only" id="notification-menu" role="menu">
         <div class="dropdown-content">
           <div class="notification-header">
             <h6 class="title is-6 mb-2">Notifications</h6>
@@ -93,7 +183,7 @@
           </div>
           
           <div v-if="notifications.length > 0" class="notification-footer">
-            <a href="#" @click.prevent="viewAllNotifications" class="has-text-primary">
+            <a href="#" @click.prevent="viewAllNotifications">
               View all notifications
             </a>
           </div>
@@ -111,6 +201,7 @@ import { formatDistanceToNow } from 'date-fns'
 
 const notificationsStore = useNotificationsStore()
 const isOpen = ref(false)
+const isMobile = ref(window.innerWidth <= 768)
 
 const notifications = computed(() => notificationsStore.notifications.slice(0, 10))
 const unreadCount = computed(() => notificationsStore.unreadCount)
@@ -158,6 +249,10 @@ const viewAllNotifications = () => {
   console.log('Navigate to all notifications')
 }
 
+const closeModal = () => {
+  isOpen.value = false
+}
+
 const getNotificationIcon = (type) => {
   const icons = {
     lock_status: 'fas fa-lock text-info',
@@ -180,14 +275,21 @@ const handleClickOutside = (event) => {
   }
 }
 
+// Handle window resize for mobile detection
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  window.addEventListener('resize', handleResize)
   // Start notification manager
   notificationManager.start()
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('resize', handleResize)
   // Don't stop notification manager here - let it run globally
 })
 </script>
@@ -219,6 +321,13 @@ onUnmounted(() => {
 .dropdown-menu {
   min-width: 350px;
   max-width: 400px;
+  right: 0;
+  left: auto;
+}
+
+.dropdown-content {
+  background: white;
+  color: black;
 }
 
 .notification-header {
@@ -295,5 +404,67 @@ onUnmounted(() => {
   padding: 0.75rem 1rem;
   text-align: center;
   border-top: 1px solid #e8e8e8;
+}
+
+/* Color overrides for white background */
+.notification-title {
+  color: black !important;
+}
+
+.notification-message {
+  color: #333 !important;
+}
+
+.notification-time {
+  color: #666 !important;
+}
+
+.notification-header .title,
+.notification-header h6.title {
+  color: black !important;
+}
+
+.notification-footer a {
+  color: black !important;
+}
+
+/* Mobile Modal Styles */
+.notification-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem;
+  padding-top: 4rem;
+}
+
+.notification-modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Hide desktop dropdown on mobile */
+@media screen and (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* Hide modal on desktop */
+@media screen and (min-width: 769px) {
+  .notification-modal {
+    display: none !important;
+  }
 }
 </style>

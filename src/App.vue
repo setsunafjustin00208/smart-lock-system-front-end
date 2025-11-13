@@ -4,7 +4,7 @@
     <main class="main-content" :class="{ 'with-navbar': authStore.isAuthenticated }">
       <RouterView />
     </main>
-    <NotificationCenter />
+    <NotificationCenter v-if="authStore.isAuthenticated" />
   </div>
 </template>
 

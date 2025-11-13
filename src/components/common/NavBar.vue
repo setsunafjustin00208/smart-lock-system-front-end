@@ -43,11 +43,19 @@
       </div>
 
       <div class="navbar-end">
+        <!-- Mobile logout button - shown only on mobile -->
+        <a class="navbar-item has-text-white is-hidden-desktop" @click="logout">
+          <i class="fas fa-sign-out-alt mr-2"></i>
+          Logout
+        </a>
+        
+        <!-- Notification Center - visible on all devices -->
         <div class="navbar-item">
+          <NotificationCenter />
+        </div>
+        
+        <div class="navbar-item is-hidden-touch">
           <div class="buttons">
-            <!-- Notification Center -->
-            <NotificationCenter />
-            
             <div class="dropdown is-right" :class="{ 'is-active': showUserMenu }">
               <div class="dropdown-trigger">
                 <button 
@@ -176,9 +184,22 @@ const logout = async () => {
 }
 
 .dropdown-menu {
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: white;
   backdrop-filter: blur(10px);
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+}
+
+.dropdown-content {
+  background-color: white;
+}
+
+.dropdown-item {
+  color: black !important;
+  background-color: transparent !important;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5 !important;
 }
 </style>
