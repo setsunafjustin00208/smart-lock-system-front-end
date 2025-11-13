@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   base: '/',
   define: {
-    __APP_NAME__: JSON.stringify(process.env.VITE_APP_NAME || 'Lockey'),
+    __APP_NAME__: JSON.stringify(process.env.VITE_APP_NAME || 'locKEY'),
     __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || '3.0.0')
   },
   resolve: {
