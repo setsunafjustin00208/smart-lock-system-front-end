@@ -12,6 +12,14 @@
       </div>
       
       <nav class="sidebar-nav">
+        <div class="user-profile">
+          <i class="fas fa-user-circle"></i>
+          <div class="profile-info">
+            <span class="username">{{ authStore.user?.username }}</span>
+            <span class="role">{{ authStore.user?.role }}</span>
+          </div>
+        </div>
+        
         <router-link class="nav-item" to="/" @click="$emit('close')">
           <i class="fas fa-tachometer-alt"></i>
           <span>Dashboard</span>
@@ -33,40 +41,44 @@
           <i class="fas fa-cog"></i>
           <span>Settings</span>
         </router-link>
-      </nav>
-      
-      <div class="sidebar-footer">
-        <div class="user-info">
-          <i class="fas fa-user"></i>
-          <span>{{ authStore.user?.username }}</span>
-        </div>
-        <button class="logout-btn" @click="logout">
+        <a class="nav-item" @click="logout">
           <i class="fas fa-sign-out-alt"></i>
           <span>Logout</span>
-        </button>
-      </div>
+        </a>
+      </nav>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
-defineProps({
+const props = defineProps({
   isOpen: Boolean
 })
 
-defineEmits(['close'])
+const emit = defineEmits(['close'])
 
 const router = useRouter()
 const authStore = useAuthStore()
 const appName = computed(() => __APP_NAME__)
 
+// Prevent body scroll when sidebar is open
+watch(() => props.isOpen, (isOpen) => {
+  if (isOpen) {
+    document.body.classList.add('sidebar-open')
+  } else {
+    document.body.classList.remove('sidebar-open')
+  }
+})
+
 const logout = async () => {
   await authStore.logout()
   router.push('/login')
+  // Close sidebar after logout
+  emit('close')
 }
 </script>
 
@@ -89,18 +101,24 @@ const logout = async () => {
   visibility: visible;
 }
 
+/* Prevent body scroll when sidebar is open */
+body.sidebar-open {
+  overflow: hidden;
+}
+
 .mobile-sidebar {
   position: fixed;
   top: 0;
   left: 0;
   width: 280px;
-  height: 100%;
+  height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  overflow-y: auto;
 }
 
 .mobile-sidebar-overlay.is-active .mobile-sidebar {
@@ -142,6 +160,39 @@ const logout = async () => {
 .sidebar-nav {
   flex: 1;
   padding: 1rem 0;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin: 0 1rem 1rem 1rem;
+}
+
+.user-profile i {
+  font-size: 2.5rem;
+  color: white;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.username {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: white;
+}
+
+.role {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: capitalize;
 }
 
 .nav-item {

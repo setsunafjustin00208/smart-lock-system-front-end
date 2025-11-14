@@ -9,19 +9,19 @@
           </h1>
         </div>
         <div class="column is-narrow">
-          <div class="field is-grouped">
+          <div class="field is-grouped is-grouped-multiline">
             <div class="control">
               <button 
-                class="button is-info is-rounded"
+                class="button is-info is-small"
                 @click="refreshLocks"
                 :class="{ 'is-loading': isRefreshing }"
+                style="padding: 0.25rem 0.5rem;"
               >
-                <i class="fas fa-sync mr-2"></i>
-                Refresh
+                <i class="fas fa-sync"></i>
               </button>
             </div>
             <div class="control">
-              <div class="select is-rounded">
+              <div class="select is-small">
                 <select v-model="filterStatus">
                   <option value="all">All Status</option>
                   <option value="online">Online</option>
@@ -30,7 +30,7 @@
               </div>
             </div>
             <div class="control">
-              <div class="select is-rounded">
+              <div class="select is-small">
                 <select v-model="filterLocked">
                   <option value="all">All Locks</option>
                   <option value="locked">Locked</option>
