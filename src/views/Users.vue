@@ -293,8 +293,8 @@ const getRoleClass = (role) => {
     case 'admin': return 'is-danger'
     case 'manager': return 'is-warning'
     case 'user': return 'is-info'
-    case 'guest': return 'is-light'
-    default: return 'is-light'
+    case 'guest': return 'is-dark'
+    default: return 'is-dark'
   }
 }
 

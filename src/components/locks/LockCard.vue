@@ -1,5 +1,5 @@
 <template>
-  <div class="card lock-card animate-slide-in" :class="lockStatusClass">
+  <div class="card lock-card" :class="lockStatusClass">
     <div class="card-content">
       <!-- Header with lock icon and status -->
       <div class="lock-header">
@@ -88,18 +88,15 @@ const formatDate = (date) => {
 <style scoped>
 .lock-card {
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s ease;
   overflow: hidden;
   position: relative;
 }
 
 .lock-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
 }
 
 /* Status-based card styling */
@@ -137,7 +134,7 @@ const formatDate = (date) => {
 
 .lock-icon {
   font-size: 2rem;
-  transition: all 0.3s ease;
+  transition: color 0.2s ease;
 }
 
 .lock-icon--locked {
@@ -214,7 +211,7 @@ const formatDate = (date) => {
   justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s ease;
   position: relative;
   overflow: hidden;
 }
@@ -225,20 +222,15 @@ const formatDate = (date) => {
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
 
-.action-button--lock:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
-}
-
 .action-button--unlock {
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
   color: white;
   box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
 }
 
+.action-button--lock:hover,
 .action-button--unlock:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(251, 191, 36, 0.4);
+  transform: translateY(-1px);
 }
 
 .action-button--disabled {

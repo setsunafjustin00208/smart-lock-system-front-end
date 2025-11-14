@@ -3,7 +3,7 @@
     <div class="container is-fluid">
       <div class="columns">
         <div class="column">
-          <h1 class="title is-2 mb-5 has-text-white">
+          <h1 class="title is-2 mb-5 has-text-white dashboard-title">
             <i class="fas fa-tachometer-alt mr-3"></i>
             Dashboard
           </h1>
@@ -185,8 +185,8 @@ const refreshStatus = async () => {
 onMounted(async () => {
   // Fetch locks from API
   await locksStore.fetchLocks()
-  // Start real-time updates
-  locksStore.startRealTimeUpdates()
+  // Start status polling only (reduced frequency)
+  locksStore.startPolling()
 })
 </script>
 
@@ -230,6 +230,10 @@ onMounted(async () => {
 @media screen and (max-width: 768px) {
   .dashboard {
     padding: 0.5rem 0;
+  }
+  
+  .dashboard-title {
+    margin-top: 10px;
   }
   
   .stats-card {

@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   base: '/',
   define: {
-    __APP_NAME__: JSON.stringify(process.env.VITE_APP_NAME || 'locKEY'),
+    __APP_NAME__: JSON.stringify(process.env.VITE_APP_NAME || 'LocKEY'),
     __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION || '3.0.0')
   },
   resolve: {
@@ -17,7 +17,8 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
-    open: false
+    open: false,
+    allowedHosts: ['neat-maps-hope.loca.lt']
   },
   build: {
     target: 'esnext',

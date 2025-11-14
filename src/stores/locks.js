@@ -32,6 +32,7 @@ export const useLocksStore = defineStore('locks', () => {
 
 
   const fetchLocks = async () => {
+    if (loading.value) return
     loading.value = true
     error.value = null
     
@@ -60,7 +61,6 @@ export const useLocksStore = defineStore('locks', () => {
       
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch locks'
-      toast.error('Failed to load locks')
       console.error('Fetch locks error:', err)
     } finally {
       loading.value = false

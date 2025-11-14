@@ -11,6 +11,16 @@
         <div class="column is-narrow">
           <div class="field is-grouped">
             <div class="control">
+              <button 
+                class="button is-info is-rounded"
+                @click="refreshLocks"
+                :class="{ 'is-loading': isRefreshing }"
+              >
+                <i class="fas fa-sync mr-2"></i>
+                Refresh
+              </button>
+            </div>
+            <div class="control">
               <div class="select is-rounded">
                 <select v-model="filterStatus">
                   <option value="all">All Status</option>
@@ -45,11 +55,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useLocksStore } from '../stores/locks'
+import { useToast } from 'vue-toastification'
 import LockGrid from '../components/locks/LockGrid.vue'
 
 const locksStore = useLocksStore()
+const toast = useToast()
 const filterStatus = ref('all')
 const filterLocked = ref('all')
+const isRefreshing = ref(false)
 
 const filteredLocks = computed(() => {
   let filtered = locksStore.locks
@@ -66,6 +79,13 @@ const filteredLocks = computed(() => {
 
   return filtered
 })
+
+const refreshLocks = async () => {
+  isRefreshing.value = true
+  await locksStore.fetchLocks()
+  toast.success('Locks refreshed')
+  isRefreshing.value = false
+}
 
 onMounted(async () => {
   await locksStore.fetchLocks()

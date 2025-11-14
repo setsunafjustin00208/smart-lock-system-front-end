@@ -1,24 +1,29 @@
 <template>
   <nav class="navbar is-fixed-top glass-effect" role="navigation">
     <div class="navbar-brand">
-      <router-link class="navbar-item" to="/">
-        <i class="fas fa-lock has-text-white"></i>
-        <span class="has-text-white ml-2 is-size-5 has-text-weight-bold">{{ appName }}</span>
-      </router-link>
-      
+      <!-- Mobile sidebar burger (left side) -->
       <a 
         role="button" 
-        class="navbar-burger has-text-white" 
-        :class="{ 'is-active': showMobileMenu }"
-        @click="showMobileMenu = !showMobileMenu"
+        class="navbar-burger has-text-white is-hidden-desktop sidebar-burger" 
+        @click="showSidebar = true"
       >
         <span></span>
         <span></span>
         <span></span>
       </a>
+      
+      <router-link class="navbar-item" to="/">
+        <i class="fas fa-lock has-text-white"></i>
+        <span class="has-text-white ml-2 is-size-5 has-text-weight-bold">{{ appName }}</span>
+      </router-link>
+      
+      <!-- Mobile notification bell (right side) -->
+      <div class="navbar-item is-hidden-desktop mobile-notification">
+        <NotificationCenter />
+      </div>
     </div>
 
-    <div class="navbar-menu" :class="{ 'is-active': showMobileMenu }">
+    <div class="navbar-menu is-hidden-touch" :class="{ 'is-active': showMobileMenu }">
       <div class="navbar-start">
         <router-link class="navbar-item has-text-white" to="/">
           <i class="fas fa-tachometer-alt mr-2"></i>
@@ -42,38 +47,30 @@
         </router-link>
       </div>
 
-      <div class="navbar-end">
-        <!-- Mobile logout button - shown only on mobile -->
-        <a class="navbar-item has-text-white is-hidden-desktop" @click="logout">
-          <i class="fas fa-sign-out-alt mr-2"></i>
-          Logout
-        </a>
-        
+      <div class="navbar-end">        
         <!-- Notification Center - visible on all devices -->
         <div class="navbar-item">
           <NotificationCenter />
         </div>
         
-        <div class="navbar-item is-hidden-touch">
-          <div class="buttons">
-            <div class="dropdown is-right" :class="{ 'is-active': showUserMenu }">
-              <div class="dropdown-trigger">
-                <button 
-                  class="button is-small is-outlined is-white"
-                  @click="showUserMenu = !showUserMenu"
-                >
-                  <i class="fas fa-user mr-1"></i>
-                  <span>{{ authStore.user?.username }}</span>
-                  <i class="fas fa-angle-down ml-1"></i>
-                </button>
-              </div>
-              <div class="dropdown-menu">
-                <div class="dropdown-content">
-                  <a class="dropdown-item" @click="logout">
-                    <i class="fas fa-sign-out-alt mr-2"></i>
-                    Logout
-                  </a>
-                </div>
+        <div class="navbar-item">
+          <div class="dropdown is-right" :class="{ 'is-active': showUserMenu }">
+            <div class="dropdown-trigger">
+              <button 
+                class="button is-small is-outlined is-white"
+                @click="showUserMenu = !showUserMenu"
+              >
+                <i class="fas fa-user mr-1"></i>
+                <span>{{ authStore.user?.username }}</span>
+                <i class="fas fa-angle-down ml-1"></i>
+              </button>
+            </div>
+            <div class="dropdown-menu">
+              <div class="dropdown-content">
+                <a class="dropdown-item" @click="logout">
+                  <i class="fas fa-sign-out-alt mr-2"></i>
+                  Logout
+                </a>
               </div>
             </div>
           </div>
@@ -81,6 +78,9 @@
       </div>
     </div>
   </nav>
+
+  <!-- Mobile Sidebar (kept for future use) -->
+  <MobileSidebar :is-open="showSidebar" @close="showSidebar = false" />
 </template>
 
 <script setup>
@@ -88,11 +88,13 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import NotificationCenter from './NotificationCenter.vue'
+import MobileSidebar from './MobileSidebar.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 const showMobileMenu = ref(false)
+const showSidebar = ref(false)
 const showUserMenu = ref(false)
 
 const appName = computed(() => __APP_NAME__)
@@ -135,45 +137,48 @@ const logout = async () => {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Mobile menu improvements */
-@media screen and (max-width: 1023px) {
-  .navbar-menu {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-    border-radius: 0 0 12px 12px;
-    margin-top: 1px;
+/* Mobile hamburger styling */
+.navbar-burger {
+  height: 3.25rem;
+  width: 3.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.navbar-burger:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile sidebar burger positioning */
+.sidebar-burger {
+  order: -1;
+  margin-right: 0.25rem;
+}
+
+/* Mobile notification positioning */
+.mobile-notification {
+  margin-left: auto;
+  padding: 0.5rem 0.75rem;
+}
+
+.mobile-notification .notification-center {
+  position: relative;
+  margin-left: 9.5em;
+}
+
+.mobile-notification .dropdown {
+  margin-top: 5px;
+}
+
+/* Mobile navbar brand spacing */
+@media screen and (max-width: 768px) {
+  .navbar-brand {
+    justify-content: flex-start;
+    margin-right: 50%;
   }
   
-  .navbar-menu .navbar-item:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-  }
-  
-  .navbar-menu .navbar-end .navbar-item {
-    border-bottom: none;
-  }
-  
-  .navbar-burger {
-    height: 3.25rem;
-    width: 3.25rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .navbar-burger:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  
-  .navbar-burger.is-active span:nth-child(1) {
-    transform: translateY(5px) rotate(45deg);
-  }
-  
-  .navbar-burger.is-active span:nth-child(2) {
-    opacity: 0;
-  }
-  
-  .navbar-burger.is-active span:nth-child(3) {
-    transform: translateY(-5px) rotate(-45deg);
+  .navbar-brand .navbar-item {
+    padding-left: 0.25rem;
   }
 }
 
