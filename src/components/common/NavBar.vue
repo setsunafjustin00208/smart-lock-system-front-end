@@ -163,7 +163,6 @@ const logout = async () => {
 
 .mobile-notification .notification-center {
   position: relative;
-  margin-left: 9.5em;
 }
 
 .mobile-notification .dropdown {
