@@ -1,3 +1,30 @@
+/* Prevent body scroll when sidebar is open */
+body.sidebar-open {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+}
+
+/* Performance optimizations */
+* {
+  will-change: auto;
+}
+
+/* Optimize scrolling performance */
+body {
+  transform: translateZ(0);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Reduce motion for better performance */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Force Bulma Light Mode */
 html {
   color-scheme: light !important;
@@ -11,21 +38,18 @@ body {
 
 /* Glass morphism background */
 .container, .section, .hero-body {
-  background: rgba(255, 255, 255, 0.1) !important;
   backdrop-filter: blur(10px) !important;
 /* Cards and components glass effect */
 .card, .box, .panel, .modal-card {
   background: rgba(255, 255, 255, 0.15) !important;
-  backdrop-filter: blur(10px) !important;
   border-radius: 15px !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Buttons glass effect */
 .button {
   background: rgba(255, 255, 255, 0.2) !important;
-  backdrop-filter: blur(10px) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   color: #ffffff !important;
   border-radius: 10px !important;
@@ -33,8 +57,6 @@ body {
 
 .button:hover {
   background: rgba(255, 255, 255, 0.3) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Login page specific styling */
@@ -64,10 +86,9 @@ body {
 .card.glass-effect,
 .glass-effect {
   background: rgba(102, 126, 234, 0.15) !important;
-  backdrop-filter: blur(15px) !important;
   border-radius: 20px !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37) !important;
+  box-shadow: 0 4px 16px rgba(31, 38, 135, 0.2) !important;
   color: #ffffff !important;
 }
 
@@ -76,11 +97,14 @@ body {
 }
 
 /* Force username icon to unset white color */
-.fas.fa-user {
-  color: rgb(69, 65, 65) !important;
+.card-header-title .fas.fa-user,
+.glass-effect .fas.fa-user,
+.has-text-white .fas.fa-user {
+  color: #ffffff !important;
 }
 
-.black-login-icon {
+.black-login-icon,
+.glass-effect .fas.fa-user.black-login-icon {
   color: rgb(69, 65, 65) !important;
 }
 
@@ -123,10 +147,16 @@ p, span, div {
   color: #ffffff !important;
 }
 
+/* Ensure card header titles are always white - highest specificity */
+.card .card-header .card-header-title,
+.glass-effect .card-header .card-header-title,
+.card-header-title.has-text-white {
+  color: #ffffff !important;
+}
+
 /* Navigation styling */
 .navbar {
   background: rgba(255, 255, 255, 0.2) !important;
-  backdrop-filter: blur(15px) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -167,11 +197,11 @@ p, span, div {
   color: #363636 !important;
 }
 
-.card-header-title {
-  color: #363636 !important;
+.glass-effect .card-header-title {
+  color: #ffffff !important;
 }
 
-.card-content {
+.glass-effect .card-content {
   color: #363636 !important;
 }
 

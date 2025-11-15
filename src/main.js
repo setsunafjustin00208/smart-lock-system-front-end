@@ -17,18 +17,18 @@ app.use(pinia)
 app.use(router)
 app.use(Toast, {
   position: 'top-right',
-  timeout: 4000,
+  timeout: 2000,
   closeOnClick: true,
-  pauseOnFocusLoss: true,
-  pauseOnHover: true,
+  pauseOnFocusLoss: false,
+  pauseOnHover: false,
   draggable: true,
   draggablePercent: 0.6,
   showCloseButtonOnHover: false,
-  hideProgressBar: false,
-  closeButton: 'button',
+  hideProgressBar: true,
+  closeButton: false,
   icon: true,
   rtl: false,
-  maxToasts: 5,
+  maxToasts: 3,
   newestOnTop: true
 })
 

@@ -3,7 +3,7 @@
     <div class="container is-fluid">
       <div class="columns">
         <div class="column">
-          <h1 class="title is-2 mb-5 has-text-white">
+          <h1 class="title is-2 mb-5 has-text-white dashboard-title">
             <i class="fas fa-tachometer-alt mr-3"></i>
             Dashboard
           </h1>
@@ -168,33 +168,16 @@ const recentLocks = computed(() => {
 })
 
 const lockAll = async () => {
-  isLoading.value = true
-  const unlockedLocks = locksStore.locks.filter(lock => !lock.isLocked && lock.status === 'online')
-  
-  for (const lock of unlockedLocks) {
-    await locksStore.toggleLock(lock.id)
-  }
-  
-  toast.success(`Locked ${unlockedLocks.length} locks`)
-  isLoading.value = false
+  await locksStore.lockAll()
 }
 
 const unlockAll = async () => {
-  isLoading.value = true
-  const lockedLocks = locksStore.locks.filter(lock => lock.isLocked && lock.status === 'online')
-  
-  for (const lock of lockedLocks) {
-    await locksStore.toggleLock(lock.id)
-  }
-  
-  toast.success(`Unlocked ${lockedLocks.length} locks`)
-  isLoading.value = false
+  await locksStore.unlockAll()
 }
 
 const refreshStatus = async () => {
   isLoading.value = true
-  // Simulate refresh
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  await locksStore.fetchLocks()
   toast.success('Status refreshed')
   isLoading.value = false
 }
@@ -202,8 +185,8 @@ const refreshStatus = async () => {
 onMounted(async () => {
   // Fetch locks from API
   await locksStore.fetchLocks()
-  // Start real-time updates
-  locksStore.startRealTimeUpdates()
+  // Start status polling only (reduced frequency)
+  locksStore.startPolling()
 })
 </script>
 
@@ -247,6 +230,10 @@ onMounted(async () => {
 @media screen and (max-width: 768px) {
   .dashboard {
     padding: 0.5rem 0;
+  }
+  
+  .dashboard-title {
+    margin-top: 10px;
   }
   
   .stats-card {

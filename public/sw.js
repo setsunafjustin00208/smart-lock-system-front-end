@@ -1,8 +1,9 @@
-const CACHE_NAME = 'smartlock-v1'
+const CACHE_NAME = 'lockey-v1'
 const urlsToCache = [
-  '/smart-lock-system-front-end/',
-  '/smart-lock-system-front-end/index.html',
-  '/smart-lock-system-front-end/manifest.json'
+  '/',
+  '/static/js/bundle.js',
+  '/static/css/main.css',
+  '/manifest.json'
 ]
 
 self.addEventListener('install', event => {
@@ -21,19 +22,5 @@ self.addEventListener('fetch', event => {
         }
         return fetch(event.request)
       })
-  )
-})
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName)
-          }
-        })
-      )
-    })
   )
 })

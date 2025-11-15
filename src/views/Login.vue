@@ -1,13 +1,13 @@
 <template>
   <div class="login-container">
     <div class="container">
-      <div class="columns is-centered is-vcentered" style="min-height: 100vh;">
-        <div class="column is-4-desktop is-6-tablet is-10-mobile">
+      <div class="login-wrapper">
+        <div class="login-form-container">
           <div class="card glass-effect">
             <div class="card-content">
               <div class="has-text-centered mb-5">
-                <i class="fas fa-lock is-size-1 has-text-white mb-3"></i>
-                <h1 class="title is-3 has-text-white">{{ appName }}</h1>
+                <img src="/logo-brand.png" class="login-logo" alt="LocKEY Logo">
+
                 <p class="subtitle is-6 has-text-white-ter">Secure Access Management</p>
               </div>
               
@@ -23,7 +23,7 @@
                       required
                     >
                     <span class="icon is-small is-left">
-                      <i class="fas fa-user"></i>
+                      <i class="fas fa-user black-login-icon"></i>
                     </span>
                   </div>
                 </div>
@@ -195,16 +195,33 @@ const handleLogin = async () => {
   opacity: 0.9;
 }
 
+.login-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.login-form-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+@media screen and (min-width: 769px) {
+  .login-form-container {
+    max-width: 350px;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .login-form-container {
+    max-width: 400px;
+  }
+}
+
 /* Mobile optimizations */
 @media screen and (max-width: 768px) {
-  .login-container {
-    padding: 1rem;
-  }
-  
-  .card {
-    margin: 0;
-  }
-  
   .card-content {
     padding: 2rem 1.5rem;
   }
@@ -265,5 +282,10 @@ const handleLogin = async () => {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-logo {
+  width: 90%;
+  margin-bottom: 1rem;
 }
 </style>

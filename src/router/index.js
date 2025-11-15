@@ -35,16 +35,20 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory('/'),
+  history: createWebHistory(),
   routes
 })
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+  // Check if user is authenticated (including from localStorage)
+  const token = localStorage.getItem('auth_token')
+  const isAuthenticated = authStore.isAuthenticated || !!token
+  
+  if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')
-  } else if (to.meta.guest && authStore.isAuthenticated) {
+  } else if (to.meta.guest && isAuthenticated) {
     next('/')
   } else if (to.meta.role && !authStore.hasRole(to.meta.role)) {
     next('/')

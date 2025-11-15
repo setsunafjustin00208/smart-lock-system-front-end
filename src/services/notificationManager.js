@@ -18,10 +18,12 @@ class NotificationManager {
     this.isPolling = true
     this.retryCount = 0
     
+    const notificationPollingInterval = parseInt(import.meta.env.VITE_NOTIFICATION_POLLING_INTERVAL) || 30000
+    
     // Start polling with error handling
     this.pollingInterval = setInterval(async () => {
       await this.pollNotifications()
-    }, 10000) // Increased to 10 seconds to reduce load
+    }, notificationPollingInterval)
     
     // Initial fetch
     this.pollNotifications()
