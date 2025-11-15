@@ -22,9 +22,27 @@
             <i class="fas fa-spinner fa-spin fa-2x has-text-white"></i>
           </div>
           <div v-else>
+            <!-- Search Bar -->
+            <div class="columns mb-4">
+              <div class="column is-hidden-mobile"></div>
+              <div class="column is-3-desktop is-12-mobile">
+                <div class="control has-icons-left search-control">
+                <input 
+                  v-model="searchQuery" 
+                  class="input" 
+                  type="text" 
+                  placeholder="Search users..."
+                >
+                <span class="icon is-left">
+                  <i class="fas fa-search"></i>
+                </span>
+              </div>
+              </div>
+            </div>
+
             <!-- Mobile Card List -->
             <div class="user-cards is-hidden-tablet">
-              <div v-for="user in users" :key="user.id" class="card mb-4 glass-effect">
+              <div v-for="user in filteredUsers" :key="user.id" class="card mb-4 glass-effect">
                 <div class="card-content">
                   <div class="media">
                     <div class="media-left">
@@ -87,7 +105,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="user in users" :key="user.id">
+                  <tr v-for="user in filteredUsers" :key="user.id">
                     <td class="has-text-white">{{ user.username }}</td>
                     <td class="has-text-white-ter">{{ user.email }}</td>
                     <td>
@@ -230,7 +248,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import { useToast } from 'vue-toastification'
 import api from '@/services/api'
 import { formatDistanceToNow } from 'date-fns'
@@ -244,7 +262,17 @@ const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const editingUser = ref(null)
 
+const searchQuery = ref('')
+
 const availableRoles = ['admin', 'manager', 'user', 'guest']
+
+const filteredUsers = computed(() => {
+  return users.value.filter(user => 
+    user.username.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    user.roles.some(role => role.toLowerCase().includes(searchQuery.value.toLowerCase()))
+  )
+})
 
 const userForm = reactive({
   username: '',
@@ -381,5 +409,17 @@ onMounted(() => {
 
 .user-action-btn {
   color: #ffffff !important;
+}
+.search-control .input {
+  background: white !important;
+  color: #363636 !important;
+}
+
+.search-control .input::placeholder {
+  color: #999 !important;
+}
+
+.search-control .icon .fas{
+  color: #363636 !important;
 }
 </style>

@@ -9,30 +9,30 @@
           </h1>
         </div>
         <div class="column is-narrow">
-          <div class="field is-grouped is-grouped-multiline">
+          <div class="field is-grouped is-grouped-multiline" :class="{ 'mb-2': isMobile }">
             <div class="control">
               <button 
-                class="button is-info is-small"
+                class="button is-info refresh-btn"
                 @click="refreshLocks"
-                :class="{ 'is-loading': isRefreshing }"
-                style="padding: 0.25rem 0.5rem;"
+                :class="{ 'is-loading': isRefreshing, 'is-small': isMobile, 'pb-2': !isMobile,}"
               >
-                <i class="fas fa-sync"></i>
+                <i class="fas fa-sync" :class="{ 'mt-1': !isMobile, 'mr-2': !isMobile }"></i>
+                <span :class="{'mt-1': !isMobile}">Refresh</span>
               </button>
             </div>
             <div class="control">
-              <div class="select is-small">
+              <div class="select">
                 <select v-model="filterStatus">
-                  <option value="all">All Status</option>
+                  <option value="all">{{ statusText }}</option>
                   <option value="online">Online</option>
                   <option value="offline">Offline</option>
                 </select>
               </div>
             </div>
             <div class="control">
-              <div class="select is-small">
+              <div class="select">
                 <select v-model="filterLocked">
-                  <option value="all">All Locks</option>
+                  <option value="all">{{ locksText }}</option>
                   <option value="locked">Locked</option>
                   <option value="unlocked">Unlocked</option>
                 </select>
@@ -53,7 +53,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useLocksStore } from '../stores/locks'
 import { useToast } from 'vue-toastification'
 import LockGrid from '../components/locks/LockGrid.vue'
@@ -63,6 +63,14 @@ const toast = useToast()
 const filterStatus = ref('all')
 const filterLocked = ref('all')
 const isRefreshing = ref(false)
+const isMobile = ref(window.innerWidth <= 1023)
+
+const updateScreenSize = () => {
+  isMobile.value = window.innerWidth <= 1023
+}
+
+const statusText = computed(() => isMobile.value ? 'All' : 'All Status')
+const locksText = computed(() => isMobile.value ? 'All' : 'All Locks')
 
 const filteredLocks = computed(() => {
   let filtered = locksStore.locks
@@ -89,6 +97,11 @@ const refreshLocks = async () => {
 
 onMounted(async () => {
   await locksStore.fetchLocks()
+  window.addEventListener('resize', updateScreenSize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateScreenSize)
 })
 </script>
 
@@ -110,5 +123,32 @@ onMounted(async () => {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.refresh-btn {
+  padding: 0.25rem 0.5rem;
+}
+
+.refresh-btn span {
+  display: inline;
+}
+
+@media screen and (max-width: 1023px) {
+  .refresh-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .refresh-btn span {
+    display: none;
+  }
+  
+  .select.is-small {
+    font-size: 0.875rem;
+  }
+  
+  .select.is-small select {
+    padding: 0.5rem 0.75rem;
+  }
 }
 </style>
