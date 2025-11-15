@@ -13,8 +13,7 @@
       </a>
       
       <router-link class="navbar-item" to="/">
-        <i class="fas fa-lock has-text-white"></i>
-        <span class="has-text-white ml-2 is-size-5 has-text-weight-bold">{{ appName }}</span>
+        <img src="/logo-brand.png" alt="LocKEY Logo" style="height: 48px;">
       </router-link>
       
       <!-- Mobile notification bell (right side) -->
@@ -84,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import NotificationCenter from './NotificationCenter.vue'
@@ -98,6 +97,58 @@ const showSidebar = ref(false)
 const showUserMenu = ref(false)
 
 const appName = computed(() => __APP_NAME__)
+
+// Swipe gesture variables
+let startX = 0
+let startY = 0
+let currentX = 0
+let currentY = 0
+let isSwipeActive = false
+
+const handleTouchStart = (e) => {
+  startX = e.touches[0].clientX
+  startY = e.touches[0].clientY
+  isSwipeActive = true
+}
+
+const handleTouchMove = (e) => {
+  if (!isSwipeActive) return
+  
+  currentX = e.touches[0].clientX
+  currentY = e.touches[0].clientY
+}
+
+const handleTouchEnd = () => {
+  if (!isSwipeActive) return
+  
+  const deltaX = currentX - startX
+  const deltaY = Math.abs(currentY - startY)
+  
+  // Only trigger if horizontal swipe is more significant than vertical
+  if (Math.abs(deltaX) > 50 && deltaY < 100) {
+    if (deltaX > 0 && startX < 50) {
+      // Swipe right from left edge - show sidebar
+      showSidebar.value = true
+    } else if (deltaX < -50 && showSidebar.value) {
+      // Swipe left - hide sidebar
+      showSidebar.value = false
+    }
+  }
+  
+  isSwipeActive = false
+}
+
+onMounted(() => {
+  document.addEventListener('touchstart', handleTouchStart, { passive: true })
+  document.addEventListener('touchmove', handleTouchMove, { passive: true })
+  document.addEventListener('touchend', handleTouchEnd, { passive: true })
+})
+
+onUnmounted(() => {
+  document.removeEventListener('touchstart', handleTouchStart)
+  document.removeEventListener('touchmove', handleTouchMove)
+  document.removeEventListener('touchend', handleTouchEnd)
+})
 
 const logout = async () => {
   await authStore.logout()

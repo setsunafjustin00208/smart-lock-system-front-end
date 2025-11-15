@@ -21,52 +21,107 @@
           <div v-if="loading" class="has-text-centered">
             <i class="fas fa-spinner fa-spin fa-2x has-text-white"></i>
           </div>
-          <div v-else class="table-container">
-            <table class="table is-fullwidth is-hoverable">
-              <thead>
-                <tr>
-                  <th class="has-text-white">Username</th>
-                  <th class="has-text-white">Email</th>
-                  <th class="has-text-white">Roles</th>
-                  <th class="has-text-white">Created</th>
-                  <th class="has-text-white">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="user in users" :key="user.id">
-                  <td class="has-text-white">{{ user.username }}</td>
-                  <td class="has-text-white-ter">{{ user.email }}</td>
-                  <td>
-                    <span 
-                      v-for="role in user.roles" 
-                      :key="role"
-                      class="tag mr-1" 
-                      :class="getRoleClass(role)"
-                    >
-                      {{ role }}
-                    </span>
-                  </td>
-                  <td class="has-text-white-ter">{{ formatDate(user.created_at) }}</td>
-                  <td>
-                    <div class="buttons are-small">
-                      <button 
-                        class="button is-info is-outlined"
-                        @click="editUser(user)"
-                      >
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button 
-                        class="button is-danger is-outlined"
-                        @click="deleteUser(user)"
-                        :disabled="user.username === 'admin'"
-                      >
-                        <i class="fas fa-trash"></i>
-                      </button>
+          <div v-else>
+            <!-- Mobile Card List -->
+            <div class="user-cards is-hidden-tablet">
+              <div v-for="user in users" :key="user.id" class="card mb-4 glass-effect">
+                <div class="card-content">
+                  <div class="media">
+                    <div class="media-left">
+                      <figure class="image is-64x64">
+                        <div class="avatar-circle has-background-primary has-text-white is-flex is-align-items-center is-justify-content-center" style="width: 64px; height: 64px; border-radius: 50%; font-weight: bold; font-size: 1.5rem;">
+                          {{ user.username.charAt(0).toUpperCase() }}
+                        </div>
+                      </figure>
                     </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    <div class="media-content">
+                      <p class="title is-5 has-text-white">{{ user.username }}</p>
+                      <p class="subtitle is-6 has-text-white-ter" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ user.email }}</p>
+                      <div class="mb-3">
+                        <span 
+                          v-for="role in user.roles" 
+                          :key="role"
+                          class="tag mr-1" 
+                          :class="getRoleClass(role)"
+                        >
+                          {{ role }}
+                        </span>
+                      </div>
+                      <p class="is-size-6 has-text-white-ter">
+                        <i class="fas fa-calendar mr-1"></i>
+                        {{ formatDate(user.created_at) }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="buttons is-right mt-4">
+                    <button 
+                      class="button is-info is-outlined user-action-btn"
+                      @click="editUser(user)"
+                    >
+                      <i class="fas fa-edit mr-1"></i>
+                      Edit
+                    </button>
+                    <button 
+                      class="button is-danger is-outlined user-action-btn"
+                      @click="deleteUser(user)"
+                      :disabled="user.username === 'admin'"
+                    >
+                      <i class="fas fa-trash mr-1"></i>
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Desktop Table -->
+            <div class="table-container is-hidden-mobile">
+              <table class="table is-fullwidth is-hoverable">
+                <thead>
+                  <tr>
+                    <th class="has-text-white">Username</th>
+                    <th class="has-text-white">Email</th>
+                    <th class="has-text-white">Roles</th>
+                    <th class="has-text-white">Created</th>
+                    <th class="has-text-white">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="user in users" :key="user.id">
+                    <td class="has-text-white">{{ user.username }}</td>
+                    <td class="has-text-white-ter">{{ user.email }}</td>
+                    <td>
+                      <span 
+                        v-for="role in user.roles" 
+                        :key="role"
+                        class="tag mr-1" 
+                        :class="getRoleClass(role)"
+                      >
+                        {{ role }}
+                      </span>
+                    </td>
+                    <td class="has-text-white-ter">{{ formatDate(user.created_at) }}</td>
+                    <td>
+                      <div class="buttons are-small">
+                        <button 
+                          class="button is-info is-outlined"
+                          @click="editUser(user)"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button 
+                          class="button is-danger is-outlined"
+                          @click="deleteUser(user)"
+                          :disabled="user.username === 'admin'"
+                        >
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -322,5 +377,9 @@ onMounted(() => {
 
 .table td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-action-btn {
+  color: #ffffff !important;
 }
 </style>

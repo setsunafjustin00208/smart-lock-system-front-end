@@ -6,8 +6,8 @@
           <div class="card glass-effect">
             <div class="card-content">
               <div class="has-text-centered mb-5">
-                <i class="fas fa-lock is-size-1 has-text-white mb-3"></i>
-                <h1 class="title is-3 has-text-white">{{ appName }}</h1>
+                <img src="/logo-brand.png" class="login-logo" alt="LocKEY Logo">
+
                 <p class="subtitle is-6 has-text-white-ter">Secure Access Management</p>
               </div>
               
@@ -23,7 +23,7 @@
                       required
                     >
                     <span class="icon is-small is-left">
-                      <i class="fas fa-user"></i>
+                      <i class="fas fa-user black-login-icon"></i>
                     </span>
                   </div>
                 </div>
@@ -210,13 +210,13 @@ const handleLogin = async () => {
 
 @media screen and (min-width: 769px) {
   .login-form-container {
-    max-width: 450px;
+    max-width: 350px;
   }
 }
 
 @media screen and (min-width: 1024px) {
   .login-form-container {
-    max-width: 500px;
+    max-width: 400px;
   }
 }
 
@@ -282,5 +282,10 @@ const handleLogin = async () => {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-logo {
+  width: 90%;
+  margin-bottom: 1rem;
 }
 </style>

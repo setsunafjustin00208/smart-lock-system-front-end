@@ -96,12 +96,6 @@
               </div>
             </div>
           </div>
-          
-          <div v-if="notifications.length > 0" class="notification-footer">
-            <a href="#" @click.prevent="viewAllNotifications">
-              View all notifications
-            </a>
-          </div>
           </div>
         </div>
       </Teleport>
@@ -180,12 +174,6 @@
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div v-if="notifications.length > 0" class="notification-footer">
-            <a href="#" @click.prevent="viewAllNotifications">
-              View all notifications
-            </a>
           </div>
         </div>
       </div>
