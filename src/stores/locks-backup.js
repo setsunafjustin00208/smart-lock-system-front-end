@@ -29,6 +29,8 @@ export const useLocksStore = defineStore('locks', () => {
     locks.value.filter(lock => !lock.status?.is_locked).length
   )
 
+
+
   const fetchLocks = async () => {
     if (loading.value) return
     loading.value = true
@@ -77,8 +79,9 @@ export const useLocksStore = defineStore('locks', () => {
       // Update the specific lock in the array
       const index = locks.value.findIndex(l => l.id === lockId)
       if (index !== -1) {
-        // Force reactivity by replacing the entire object
-        locks.value[index] = { ...updatedLock }
+        locks.value[index] = updatedLock
+        // Clear loading state
+        lockLoadingStates.value[lockId] = false
       }
       
       return updatedLock
@@ -116,58 +119,58 @@ export const useLocksStore = defineStore('locks', () => {
       return
     }
 
-    if (lockLoadingStates.value[lockId]) return
-
+    // Set loading state for specific lock
     lockLoadingStates.value[lockId] = true
     
     try {
       const action = lock.status?.is_locked ? 'unlock' : 'lock'
-      const expectedState = action === 'lock'
       
-      // Store the command timestamp
-      const commandTime = new Date().toISOString()
+      console.log('Sending request:', {
+        url: `/locks/${lockId}/control`,
+        data: { action: action }
+      })
       
-      const response = await api.post(`/locks/${lockId}/control`, { action })
+      const response = await api.post(`/locks/${lockId}/control`, { 
+        action: action
+      })
+      
+      console.log('Response:', response.data)
       
       if (response.data.status === 'success') {
         toast.success(`${lock.name} command sent`)
+        console.log(`${action} command sent for lock ${lockId}`)
         
-        // Update the lock with command timestamp immediately
-        lock.last_command_time = commandTime
+        // Fetch individual lock status with retries
+        setTimeout(async () => {
+          await fetchSingleLock(lockId)
+        }, 2000)
         
-        // Poll until state changes
-        const pollStatus = async () => {
-          const updatedLock = await fetchSingleLock(lockId)
-          if (updatedLock?.status?.is_locked === expectedState) {
-            lockLoadingStates.value[lockId] = false
-          } else {
-            setTimeout(pollStatus, 1000)
+        // Retry after 4 seconds if still loading
+        setTimeout(async () => {
+          if (lockLoadingStates.value[lockId]) {
+            await fetchSingleLock(lockId)
           }
-        }
+        }, 4000)
         
-        pollStatus()
+        // Final retry after 6 seconds
+        setTimeout(async () => {
+          if (lockLoadingStates.value[lockId]) {
+            await fetchSingleLock(lockId)
+            // Force clear loading state after final attempt
+            lockLoadingStates.value[lockId] = false
+          }
+        }, 6000)
       }
       
     } catch (err) {
+      console.error('Toggle lock error:', err)
+      console.error('Error response:', err.response?.data)
+      
       error.value = err.response?.data?.message || 'Failed to control lock'
       toast.error(`Failed to control lock: ${err.response?.data?.message || err.message}`)
+      
+      // Clear loading state on error
       lockLoadingStates.value[lockId] = false
-    }
-  }
-
-  const updateLockName = async (lockId, newName) => {
-    try {
-      const response = await api.put(`/locks/${lockId}`, { name: newName })
-      if (response.data.status === 'success') {
-        const lock = locks.value.find(l => l.id === lockId)
-        if (lock) {
-          lock.name = newName
-        }
-        toast.success('Lock name updated')
-      }
-    } catch (err) {
-      toast.error('Failed to update lock name')
-      console.error('Update lock name error:', err)
     }
   }
 
@@ -208,6 +211,8 @@ export const useLocksStore = defineStore('locks', () => {
   const getOfflineLocks = () => {
     return locks.value.filter(lock => !lock.is_online)
   }
+
+
 
   const updateLockStatus = (lockId, status) => {
     const lock = locks.value.find(l => l.id === lockId)
@@ -254,7 +259,6 @@ export const useLocksStore = defineStore('locks', () => {
     fetchSingleLock,
     fetchLockStatus,
     toggleLock,
-    updateLockName,
     controlLock,
     lockAll,
     unlockAll,
