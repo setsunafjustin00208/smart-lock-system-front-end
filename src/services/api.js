@@ -30,7 +30,7 @@ api.interceptors.request.use(
         localStorage.removeItem('auth_token')
         localStorage.removeItem('refresh_token')
         localStorage.removeItem('user')
-        window.location.href = '/lockey/login'
+        window.location.href = '/login'
         return Promise.reject(new Error('Token expired'))
       }
       config.headers.Authorization = `Bearer ${token}`
@@ -71,7 +71,7 @@ api.interceptors.response.use(
       localStorage.removeItem('auth_token')
       localStorage.removeItem('refresh_token')
       localStorage.removeItem('user')
-      window.location.href = '/lockey/login'
+      window.location.href = '/login'
       return Promise.reject(error)
     }
     

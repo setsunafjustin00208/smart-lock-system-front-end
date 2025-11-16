@@ -8,30 +8,7 @@
           <div class="status-indicator" :class="statusIndicatorClass"></div>
         </div>
         <div class="lock-info">
-          <div class="lock-name-container">
-            <div v-if="isEditing" class="edit-container">
-              <input 
-                v-model="editName" 
-                @keyup.enter="saveName"
-                class="lock-name-input"
-                ref="nameInput"
-              />
-              <button @click="saveName" class="save-btn" :disabled="!hasChanges">
-                <i class="fas fa-check"></i>
-              </button>
-              <button @click="cancelEdit" class="cancel-btn">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-            <h3 v-else class="lock-name">{{ lock.name }}</h3>
-            <button 
-              v-if="!isEditing"
-              @click="startEdit" 
-              class="edit-name-btn"
-            >
-              <i class="fas fa-edit"></i>
-            </button>
-          </div>
+          <h3 class="lock-name">{{ lock.name }}</h3>
           <p class="lock-location">{{ lock.location }}</p>
         </div>
       </div>
@@ -52,17 +29,16 @@
       
       <!-- Last Activity (simplified) -->
       <div class="lock-footer">
-        <span class="last-activity">{{ lastActivityText }}</span>
+        <span class="last-activity">{{ formatDate(lock.status?.last_activity || lock.updated_at) }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, nextTick } from 'vue'
+import { computed } from 'vue'
 import { useLocksStore } from '../../stores/locks'
 import { formatDistanceToNow } from 'date-fns'
-import { useToast } from 'vue-toastification'
 
 const props = defineProps({
   lock: {
@@ -72,21 +48,6 @@ const props = defineProps({
 })
 
 const locksStore = useLocksStore()
-const toast = useToast()
-const isEditing = ref(false)
-const editName = ref('')
-const nameInput = ref(null)
-
-const hasChanges = computed(() => 
-  editName.value.trim() !== props.lock.name && editName.value.trim() !== ''
-)
-
-const lastActivityText = computed(() => {
-  // Use command time if available, otherwise fall back to updated_at
-  const timestamp = props.lock.last_command_time || props.lock.status?.last_activity || props.lock.updated_at
-  console.log('Computing last activity for lock', props.lock.id, ':', timestamp)
-  return isLoading.value ? '...' : formatDate(timestamp)
-})
 
 const isLoading = computed(() => 
   locksStore.lockLoadingStates[props.lock.id] || false
@@ -119,35 +80,8 @@ const toggleLock = async () => {
   await locksStore.toggleLock(props.lock.id)
 }
 
-const startEdit = async () => {
-  editName.value = props.lock.name
-  isEditing.value = true
-  await nextTick()
-  nameInput.value?.focus()
-}
-
-const saveName = async () => {
-  if (!editName.value.trim()) {
-    toast.error('Lock name cannot be empty')
-    return
-  }
-  
-  if (editName.value.trim() !== props.lock.name) {
-    await locksStore.updateLockName(props.lock.id, editName.value.trim())
-  }
-  isEditing.value = false
-}
-
-const cancelEdit = () => {
-  isEditing.value = false
-  editName.value = ''
-}
-
 const formatDate = (date) => {
-  console.log('Formatting date:', date, 'for lock:', props.lock.id)
-  // Assume backend time is UTC, convert to local time
-  const utcDate = new Date(date + 'Z') // Add Z to treat as UTC
-  return formatDistanceToNow(utcDate, { addSuffix: true })
+  return formatDistanceToNow(new Date(date), { addSuffix: true })
 }
 </script>
 
@@ -241,19 +175,6 @@ const formatDate = (date) => {
   min-width: 0;
 }
 
-.lock-name-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.edit-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-}
-
 .lock-name {
   font-size: 1.1rem;
   font-weight: 600;
@@ -262,78 +183,6 @@ const formatDate = (date) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
-}
-
-.lock-name-input {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 0.25rem 0.5rem;
-  outline: none;
-  min-width: 0;
-  width: 60%;
-  max-width: 100%;
-}
-
-.lock-name-input:focus {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
-}
-
-.save-btn {
-  background: #22c55e;
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: background 0.2s ease;
-  flex-shrink: 0;
-}
-
-.save-btn:hover:not(:disabled) {
-  background: #16a34a;
-}
-
-.save-btn:disabled {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.5);
-  cursor: not-allowed;
-}
-
-.cancel-btn {
-  background: #ef4444;
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: background 0.2s ease;
-  flex-shrink: 0;
-}
-
-.cancel-btn:hover {
-  background: #dc2626;
-}
-
-.edit-name-btn {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 4px;
-  transition: color 0.2s ease;
-  flex-shrink: 0;
-}
-
-.edit-name-btn:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
 }
 
 .lock-location {
