@@ -25,7 +25,7 @@
             </div>
             <h3 v-else class="lock-name">{{ lock.name }}</h3>
             <button 
-              v-if="!isEditing"
+              v-if="!isEditing && authStore.isAdmin"
               @click="startEdit" 
               class="edit-name-btn"
             >
@@ -61,6 +61,7 @@
 <script setup>
 import { computed, ref, nextTick } from 'vue'
 import { useLocksStore } from '../../stores/locks'
+import { useAuthStore } from '../../stores/auth'
 import { formatDistanceToNow } from 'date-fns'
 import { useToast } from 'vue-toastification'
 
@@ -72,6 +73,7 @@ const props = defineProps({
 })
 
 const locksStore = useLocksStore()
+const authStore = useAuthStore()
 const toast = useToast()
 const isEditing = ref(false)
 const editName = ref('')
