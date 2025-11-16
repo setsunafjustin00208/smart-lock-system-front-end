@@ -58,6 +58,14 @@
                   </div>
                 </div>
               </form>
+              
+              <!-- Error Message -->
+              <transition name="fade">
+                <div v-if="errorMessage" class="notification mt-4 error-message" :class="errorTypeClass">
+                  <i :class="errorIcon" class="mr-2"></i>
+                  {{ errorMessage }}
+                </div>
+              </transition>
             </div>
           </div>
         </div>
@@ -77,29 +85,70 @@ const authStore = useAuthStore()
 const toast = useToast()
 
 const isLoading = ref(false)
+const errorMessage = ref('')
+const errorType = ref('')
 const appName = computed(() => __APP_NAME__)
 const credentials = reactive({
   username: '',
   password: ''
 })
 
-const handleLogin = async () => {
+const errorTypeClass = computed(() => ({
+  'is-danger': errorType.value === 'invalid-credentials' || errorType.value === 'system-error',
+  'is-warning': errorType.value === 'account-locked'
+}))
+
+const errorIcon = computed(() => {
+  switch (errorType.value) {
+    case 'account-locked':
+      return 'fas fa-lock'
+    case 'invalid-credentials':
+      return 'fas fa-exclamation-triangle'
+    default:
+      return 'fas fa-exclamation-circle'
+  }
+})
+
+const handleLogin = async (event) => {
+  event.preventDefault()
+  event.stopPropagation()
+  
   isLoading.value = true
+  errorMessage.value = ''
+  errorType.value = ''
   
   try {
     const result = await authStore.login(credentials)
     
     if (result.success) {
-      toast.success('Login successful!')
       router.push('/')
     } else {
-      toast.error(result.message || 'Login failed')
+      // Check for account locked error (HTTP 423)
+      if (result.status === 423 || result.error_code === 'ACCOUNT_LOCKED') {
+        errorMessage.value = result.message || 'Account is locked due to too many failed login attempts. Please try again in 30 minutes.'
+        errorType.value = 'account-locked'
+      } else {
+        errorMessage.value = result.message || 'Invalid username or password'
+        errorType.value = 'invalid-credentials'
+      }
+      
+      setTimeout(() => {
+        errorMessage.value = ''
+        errorType.value = ''
+      }, 5000) // Show locked account message longer
     }
   } catch (error) {
-    toast.error('An error occurred during login')
+    errorMessage.value = 'An error occurred during login'
+    errorType.value = 'system-error'
+    setTimeout(() => {
+      errorMessage.value = ''
+      errorType.value = ''
+    }, 3000)
   } finally {
     isLoading.value = false
   }
+  
+  return false
 }
 </script>
 
@@ -287,5 +336,29 @@ const handleLogin = async () => {
 .login-logo {
   width: 90%;
   margin-bottom: 1rem;
+}
+
+/* Error message fade animation */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.error-message {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

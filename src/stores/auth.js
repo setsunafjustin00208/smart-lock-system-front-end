@@ -38,9 +38,12 @@ export const useAuthStore = defineStore('auth', () => {
       return { success: true, user: userData }
     } catch (error) {
       console.error('Login error:', error)
+      const errorData = error.response?.data
       return { 
         success: false, 
-        message: error.response?.data?.messages?.error || 'Login failed' 
+        message: errorData?.message || errorData?.messages?.error || 'Login failed',
+        status: error.response?.status,
+        error_code: errorData?.error_code
       }
     }
   }
