@@ -6,7 +6,7 @@
           <div class="card glass-effect">
             <div class="card-content">
               <div class="has-text-centered mb-5">
-                <img src="/logo-brand.png" class="login-logo" alt="LocKEY Logo">
+                <img src="/logo-brand-new.png" class="login-logo" alt="LocKEY Logo">
 
                 <p class="subtitle is-6 has-text-white-ter">Secure Access Management</p>
               </div>
@@ -30,16 +30,19 @@
                 
                 <div class="field">
                   <label class="label has-text-white">Password</label>
-                  <div class="control has-icons-left">
+                  <div class="control has-icons-left has-icons-right">
                     <input 
                       v-model="credentials.password"
                       class="input is-rounded"
-                      type="password" 
+                      :type="showPassword ? 'text' : 'password'" 
                       placeholder="Enter password"
                       required
                     >
                     <span class="icon is-small is-left">
                       <i class="fas fa-lock black-login-icon"></i>
+                    </span>
+                    <span class="icon is-small is-right is-clickable" @click="showPassword = !showPassword">
+                      <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'" class="black-login-icon"></i>
                     </span>
                   </div>
                 </div>
@@ -87,6 +90,7 @@ const toast = useToast()
 const isLoading = ref(false)
 const errorMessage = ref('')
 const errorType = ref('')
+const showPassword = ref(false)
 const appName = computed(() => __APP_NAME__)
 const credentials = reactive({
   username: '',
@@ -360,5 +364,14 @@ const handleLogin = async (event) => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.is-clickable {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.is-clickable:hover {
+  color: #3273dc !important;
 }
 </style>

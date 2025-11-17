@@ -13,7 +13,7 @@
       </a>
       
       <router-link class="navbar-item" to="/">
-        <img src="/logo-brand.png" alt="LocKEY Logo" style="height: 48px;">
+        <img src="/logo-brand-new.png" alt="LocKEY Logo" style="height: 48px;">
       </router-link>
       
       <!-- Mobile notification bell (right side) -->

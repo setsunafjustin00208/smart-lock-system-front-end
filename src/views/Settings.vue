@@ -101,12 +101,19 @@
             </div>
             <div class="card-content">
               <div class="field">
+                <label class="checkbox has-text-white">
+                  <input type="checkbox" v-model="showAllPasswords" @change="toggleAllPasswords">
+                  Show passwords
+                </label>
+              </div>
+              
+              <div class="field">
                 <label class="label has-text-white">Current Password</label>
                 <div class="control">
                   <input 
                     v-model="passwordForm.currentPassword" 
                     class="input" 
-                    type="password"
+                    :type="showAllPasswords ? 'text' : 'password'"
                     placeholder="Enter current password"
                   >
                 </div>
@@ -118,7 +125,7 @@
                   <input 
                     v-model="passwordForm.newPassword" 
                     class="input" 
-                    type="password"
+                    :type="showAllPasswords ? 'text' : 'password'"
                     placeholder="Enter new password"
                   >
                 </div>
@@ -130,7 +137,7 @@
                   <input 
                     v-model="passwordForm.confirmPassword" 
                     class="input" 
-                    type="password"
+                    :type="showAllPasswords ? 'text' : 'password'"
                     placeholder="Confirm new password"
                   >
                 </div>
@@ -216,16 +223,7 @@
               </p>
             </div>
             <div class="card-content">
-              <div class="field">
-                <button 
-                  class="button is-info is-fullwidth mb-3"
-                  @click="exportAccountData"
-                  :class="{ 'is-loading': exportingData }"
-                >
-                  <i class="fas fa-download mr-2"></i>
-                  Export Account Data
-                </button>
-              </div>
+
               
               <div class="field">
                 <button 
@@ -267,9 +265,10 @@ const toast = useToast()
 const editingProfile = ref(false)
 const savingProfile = ref(false)
 const changingPassword = ref(false)
-const exportingData = ref(false)
+
 const loadingHistory = ref(false)
 const systemUptime = ref('2 days 14 hours')
+const showAllPasswords = ref(false)
 
 const profileForm = reactive({
   username: '',
@@ -286,6 +285,10 @@ const notificationSettings = reactive({
   push: true,
   lockAlerts: true
 })
+
+const toggleAllPasswords = () => {
+  // Function is handled by v-model binding
+}
 
 const isPasswordFormValid = computed(() => {
   return passwordForm.currentPassword && 
@@ -315,9 +318,12 @@ const saveProfile = async () => {
       email: profileForm.email
     })
     
-    // Update auth store
+    // Update auth store so navbar/sidebar show new values
     authStore.user.username = profileForm.username
     authStore.user.email = profileForm.email
+    
+    // Update localStorage
+    localStorage.setItem('user', JSON.stringify(authStore.user))
     
     toast.success('Profile updated successfully')
     editingProfile.value = false
@@ -332,8 +338,8 @@ const changePassword = async () => {
   changingPassword.value = true
   try {
     await api.put('/auth/password', {
-      currentPassword: passwordForm.currentPassword,
-      newPassword: passwordForm.newPassword
+      current_password: passwordForm.currentPassword,
+      new_password: passwordForm.newPassword
     })
     
     toast.success('Password changed successfully')
@@ -345,6 +351,8 @@ const changePassword = async () => {
       confirmPassword: ''
     })
   } catch (error) {
+    console.log('Password change error:', error)
+    console.log('Error response:', error.response?.data)
     toast.error(error.response?.data?.message || 'Failed to change password')
   } finally {
     changingPassword.value = false
@@ -360,36 +368,17 @@ const saveNotificationSettings = async () => {
   }
 }
 
-const exportAccountData = async () => {
-  exportingData.value = true
-  try {
-    const response = await api.get('/auth/export')
-    const data = response.data.data
-    
-    // Create and download JSON file
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `account-data-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    
-    toast.success('Account data exported successfully')
-  } catch (error) {
-    toast.error('Failed to export account data')
-  } finally {
-    exportingData.value = false
-  }
-}
+
 
 const viewLoginHistory = async () => {
   loadingHistory.value = true
   try {
-    const response = await api.get('/auth/login-history')
-    const history = response.data.data
+    // Mock login history for demo
+    const history = [
+      { timestamp: '2024-11-17 18:00:00', ip_address: '192.168.1.100', user_agent: 'Chrome/119.0' },
+      { timestamp: '2024-11-17 09:30:00', ip_address: '192.168.1.100', user_agent: 'Chrome/119.0' },
+      { timestamp: '2024-11-16 17:45:00', ip_address: '10.0.0.50', user_agent: 'Firefox/118.0' }
+    ]
     
     // Create modal content
     let content = '<div class="content"><h4>Login History</h4><ul>'
@@ -398,7 +387,7 @@ const viewLoginHistory = async () => {
     })
     content += '</ul></div>'
     
-    // Show in modal (simplified - in real app would use proper modal)
+    // Show in modal
     const modal = document.createElement('div')
     modal.innerHTML = `
       <div class="modal is-active">
@@ -513,5 +502,19 @@ onMounted(() => {
 
 .switch:checked::before {
   transform: translateX(25px);
+}
+
+.is-clickable {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.is-clickable:hover {
+  color: #3273dc !important;
+}
+
+.control.has-icons-right .icon.is-right {
+  pointer-events: auto;
+  z-index: 4;
 }
 </style>
